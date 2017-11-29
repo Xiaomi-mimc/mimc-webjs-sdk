@@ -1,0 +1,105 @@
+<!DOCTYPE html>  
+<meta charset="utf-8" />  
+<title>WebSocket Test</title>
+<script type="text/javascript" src="../sdk/mimc-min_1_0_0.js"></script>
+<script language="javascript"type="text/javascript">
+    //var wsUri ="ws://10.38.162.117:5222";
+    var outputs;
+    mimc_appId = "2882303761517669588";
+    mimc_appSecret = "b0L3IOz/9Ob809v8H2FbVg==";
+    mimc_appKey = "5111766983588";
+    mimc_appAccount = "";
+
+    function init() { 
+        outputs = document.getElementById("output");
+    }
+
+    /*@note: fetchToken()访问APP应用方自行实现的AppProxyService服务，该服务实现以下功能：
+      存储appId/appKey/appSec（不应当存储在APP客户端）
+      用户在APP系统内的合法鉴权
+      调用小米TokenService服务，并将小米TokenService服务返回结果通过fetchToken()原样返回 **/
+    function fetchMIMCToken() {
+        return httpRequest('https://mimc.chat.xiaomi.net/api/account/token');
+    }
+
+    function httpRequest(url) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', url, false);
+        xhr.setRequestHeader('content-type', 'application/json');
+        var sendData = {appId:mimc_appId,appKey:mimc_appKey,appSecret:mimc_appSecret,appAccount:mimc_appAccount};
+        xhr.send(JSON.stringify(sendData));
+
+        return JSON.parse(xhr.response);
+    }
+
+    function login() {
+        mimc_appAccount = document.getElementById("loginUser").value;
+        user = new MIMCUser(mimc_appId, mimc_appAccount);
+        user.registerMsgHandler(receiveMsg);
+        user.registerFetchToken(fetchMIMCToken);
+        user.registerStatusChange(statusChange);
+        user.registerServerAckHandler(serverAck);
+        user.registerDisconnHandler(disconnect);
+        user.login();
+    }
+
+    function statusChange(bindResult, errType, errReason, errDesc) {
+        if (bindResult) {
+            writeToScreens("login succeed");
+        } else {
+            writeToScreens("login failed.errReason=" + errReason + ",errDesc=" + errDesc + ",errType=" + errType);
+        }
+    }
+
+    function receiveMsg(message) {
+        writeToScreens(message.getFromAccount() + " to " + mimc_appAccount + ":" + message.getPayload());
+    }
+
+    function sendMsg() {
+        var toUser = document.getElementById("username").value;
+        var message = document.getElementById("sendmessage").value;
+
+        var messageId = user.sendMessage(toUser, message);
+        writeToScreens(mimc_appAccount + " to " + toUser + ":" + message);
+    }
+
+    function serverAck(packetId) {
+        //writeToScreens("receive msg ack:" + packetId);
+        return;
+    }
+
+    function disconnect() {
+        writeToScreens("disconnect");
+    }
+
+    function logout() {
+        user.logout();
+    }
+
+    function writeToScreens(message) {
+        var pre = document.createElement("p"); 
+        pre.style.wordWrap = "break-word"; 
+        pre.innerHTML = message; 
+        outputs.appendChild(pre);
+    }
+
+    window.addEventListener("load", init, false);  
+</script>  
+<h2>WebSocket Test</h2>
+<div id="login">
+    <label>login user：</label>
+    <input id="loginUser" type="text" />
+    <button id="button2" onclick="login()">登录</button>
+</div>
+<div id="input">
+    <label>To user：</label>
+    <input id="username" type="text" />
+    <label>消息：</label>
+    <input id="sendmessage" type="text" />
+    <button id="button1" onclick="sendMsg()">发送</button>
+</div>
+<div id="login">
+    <button id="button3" onclick="logout()">退出登录</button>
+</div>
+<div id="output"></div>  
+</html>
