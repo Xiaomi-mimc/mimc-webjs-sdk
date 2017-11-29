@@ -59,7 +59,7 @@ APP开发者访问小米开放平台（dev.mi.com）申请appId/appKey/appSec。
         //errType, errReason, errDesc为具体错误信息，string类型
     }
 ## 8) 发送消息
-    //返回值为packetId，message为用户自定义消息，string类型
+    //返回值为packetId，message为用户自定义消息，utf-8 string类型
     var packetId = user.sendMessage(appAccount, message);
 ## 9) 服务器Ack回调
     function serverAck(packetId) {
@@ -71,7 +71,7 @@ APP开发者访问小米开放平台（dev.mi.com）申请appId/appKey/appSec。
         receiveP2PMsg.getSequence();
         receiveP2PMsg.getFromAccount();
         receiveP2PMsg.getFromResource();
-        receiveP2PMsg.getPayload();//payload为用户自定义消息，string类型
+        receiveP2PMsg.getPayload();//payload为用户自定义消息，utf-8 string类型
     }  
 ## 11) 注销
     user.logout();
