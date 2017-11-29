@@ -39,9 +39,9 @@ APP开发者访问小米开放平台（dev.mi.com）申请appId/appKey/appSec。
     user.registerFetchToken(fetchMIMCToken);         //获取token回调
     user.registerStatusChange(statusChange);         //登录结果回调
     user.registerServerAckHandler(serverAck);        //发送消息后，服务器接收到消息ack的回调
-	user.registerMsgHandler(receiveMsg);             //接收消息回调
+	user.registerP2PMsgHandler(receiveP2PMsg);       //接收单聊消息回调
     user.registerDisconnHandler(disconnect);         //连接断开回调
-## 5) 获取Token
+## 5) 获取Token回调
 	function fetchMIMCToken() {
     /**
      * @return: 小米TokenService服务下发的原始数据
@@ -53,7 +53,7 @@ APP开发者访问小米开放平台（dev.mi.com）申请appId/appKey/appSec。
     }
 ## 6) 登录
     user.login();
-## 7) 获得登录状态
+## 7) 登录结果回调
     function statusChange(bindResult, errType, errReason, errDesc) {
         //bindResult为bool类型登录结果
         //errType, errReason, errDesc为具体错误信息，string类型
@@ -61,21 +61,21 @@ APP开发者访问小米开放平台（dev.mi.com）申请appId/appKey/appSec。
 ## 8) 发送消息
     //返回值为packetId，message为用户自定义消息，string类型
     var packetId = user.sendMessage(appAccount, message);
-## 9) 服务器Ack
+## 9) 服务器Ack回调
     function serverAck(packetId) {
 	    //packetId与user.sendMessage的返回值相对应，表示packetId消息已发送成功
 	}
-## 10) 接收消息
-    function receiveMsg(message) {
-        message.getPacketId();
-        message.getSequence();
-        message.getFromAccount();
-        message.getFromResource();
-        message.getPayload();//payload为用户自定义消息，string类型
+## 10) 接收消息回调
+    function registerP2PMsgHandler(receiveP2PMsg) {
+        receiveP2PMsg.getPacketId();
+        receiveP2PMsg.getSequence();
+        receiveP2PMsg.getFromAccount();
+        receiveP2PMsg.getFromResource();
+        receiveP2PMsg.getPayload();//payload为用户自定义消息，string类型
     }  
 ## 11) 注销
     user.logout();
-## 12) 连接断开
+## 12) 连接断开回调
     function disconnect() {
 	    //连接断开后需要重新登录
 	}
