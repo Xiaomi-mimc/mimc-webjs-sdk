@@ -1,44 +1,47 @@
 快速开始
+===
 
-1) 预备步骤
+## 1) 预备步骤
 
 APP开发者访问小米开放平台（dev.mi.com）申请appId/appKey/appSec。
 
 步骤如下：登陆小米开放平台网页 -> ”管理控制台” -> ”小米应用商店” -> ”创建应用” -> 填入应用名和包名 -> ”创建” -> 记下看到的AppId/AppKey/AppSec 。
 
-2) 获取Token
+## 2) 获取Token
 
-appId/appKey/appSec：
 
-小米开放平台(dev.mi.com/cosole/man/)申请
++ appId/appKey/appSec：
 
-信息敏感，不应存储于APP端，应存储在AppProxyService
+  小米开放平台(dev.mi.com/cosole/man/)申请
+  
+  信息敏感，不应存储于APP端，应存储在AppProxyService
+  
++ appAccount:
 
-appAccount:
+  APP帐号系统内唯一ID
+  
++ AppProxyService：
 
-APP帐号系统内唯一ID
-
-AppProxyService：
-
-a) 验证appAccount合法性；
-
-b) 访问TokenService，获取Token并下发给APP；
-
-访问TokenService获取Token方式如下：
-
-    curl “https://mimc.chat.xiaomi.net/api/account/token”
-    -XPOST -d '{"appId":$appId,"appKey":$appKey,"appSecret":$appSec,"appAccount":$appAccount}' 
+  a) 验证appAccount合法性；
+  
+  b) 访问TokenService，获取Token并下发给APP；
+  
+#### 访问TokenService获取Token方式如下：
+```
+    curl “https://mimc.chat.xiaomi.net/api/account/token”
+    -XPOST -d '{"appId":$appId,"appKey":$appKey,"appSecret":$appSec,"appAccount":$appAccount}' 
     -H "Content-Type: application/json"
-3) html中引用相关js文件
+```
+## 3) html中引用相关js文件
     <script type="text/javascript" src="mimc-min_1_0_0.js"></script>
-4) 创建用户并注册相关回调
+## 4) 创建用户并注册相关回调
     user = new MIMCUser(appId, appAccount);
     user.registerFetchToken(fetchMIMCToken);         //获取token回调
     user.registerStatusChange(statusChange);         //登录结果回调
     user.registerServerAckHandler(serverAck);        //发送消息后，服务器接收到消息ack的回调
 	user.registerMsgHandler(receiveMsg);             //接收消息回调
     user.registerDisconnHandler(disconnect);         //连接断开回调
-5) 获取Token
+## 5) 获取Token
 	function fetchMIMCToken() {
     /**
      * @return: 小米TokenService服务下发的原始数据
@@ -48,21 +51,21 @@ b) 访问TokenService，获取Token并下发给APP；
                     3. 调用小米TokenService服务，并将小米TokenService服务返回结果通过fetchToken()原样返回
      **/
     }
-6) 登录
+## 6) 登录
     user.login();
-7) 获得登录状态
+## 7) 获得登录状态
     function statusChange(bindResult, errType, errReason, errDesc) {
         //bindResult为bool类型登录结果
         //errType, errReason, errDesc为具体错误信息，string类型
     }
-8) 发送消息
+## 8) 发送消息
     //返回值为packetId，message为用户自定义消息，string类型
     var packetId = user.sendMessage(appAccount, message);
-9) 服务器Ack
+## 9) 服务器Ack
     function serverAck(packetId) {
 	    //packetId与user.sendMessage的返回值相对应，表示packetId消息已发送成功
 	}
-10) 接收消息
+## 10) 接收消息
     function receiveMsg(message) {
         message.getPacketId();
         message.getSequence();
@@ -70,9 +73,9 @@ b) 访问TokenService，获取Token并下发给APP；
         message.getFromResource();
         message.getPayload();//payload为用户自定义消息，string类型
     }  
-11) 注销
+## 11) 注销
     user.logout();
-12) 连接断开
+## 12) 连接断开
     function disconnect() {
 	    //连接断开后需要重新登录
 	}
