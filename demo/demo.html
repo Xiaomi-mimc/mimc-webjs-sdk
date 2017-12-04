@@ -18,15 +18,15 @@
       用户在APP系统内的合法鉴权
       调用小米TokenService服务，并将小米TokenService服务返回结果通过fetchToken()原样返回 **/
     function fetchMIMCToken() {
-        return httpRequest('https://mimc.chat.xiaomi.net/api/account/token');
+        var sendData = {appId:mimc_appId,appKey:mimc_appKey,appSecret:mimc_appSecret,appAccount:mimc_appAccount};
+        return httpRequest('https://mimc.chat.xiaomi.net/api/account/token', sendData);
     }
 
-    function httpRequest(url) {
+    function httpRequest(url, data) {
         var xhr = new XMLHttpRequest();
         xhr.open('POST', url, false);
         xhr.setRequestHeader('content-type', 'application/json');
-        var sendData = {appId:mimc_appId,appKey:mimc_appKey,appSecret:mimc_appSecret,appAccount:mimc_appAccount};
-        xhr.send(JSON.stringify(sendData));
+        xhr.send(JSON.stringify(data));
 
         return JSON.parse(xhr.response);
     }
@@ -57,9 +57,22 @@
     function sendMsg() {
         var toUser = document.getElementById("username").value;
         var message = document.getElementById("sendmessage").value;
-
-        var messageId = user.sendMessage(toUser, message);
+        var packetId = user.sendMessage(toUser, message);
         writeToScreens(mimc_appAccount + " to " + toUser + ":" + message);
+    }
+
+    function pushMsg() {
+        var toUser = document.getElementById("username").value;
+        var message = document.getElementById("sendmessage").value;
+
+        var pushData = {appId:mimc_appId, appKey:mimc_appKey, appSecret:mimc_appSecret, fromAccount:mimc_appAccount, fromResource:"resWeb", toAccount:toUser, msg:message};
+        var result = httpRequest('https://mimc.chat.xiaomi.net/api/push/p2p/', pushData);
+        writeToScreens(mimc_appAccount + " to " + toUser + ":" + message);
+        if (200 !== result.code) {
+            writeToScreens("result code:"  + result.code + ",message=" + result.message);
+        }
+
+        var packetId = result.data.packetId;
     }
 
     function serverAck(packetId) {
@@ -96,6 +109,7 @@
     <label>消息：</label>
     <input id="sendmessage" type="text" />
     <button id="button1" onclick="sendMsg()">发送</button>
+    <button id="buttonpush" onclick="pushMsg()">推送</button>
 </div>
 <div id="login">
     <button id="button3" onclick="logout()">退出登录</button>
