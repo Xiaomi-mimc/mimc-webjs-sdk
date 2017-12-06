@@ -79,7 +79,53 @@ APP开发者访问小米开放平台（dev.mi.com）申请appId/appKey/appSec。
     function disconnect() {
 	    //连接断开后需要重新登录
 	}
-	
+
+# PushService
+
+## 下面的例子中所使用到的常量解释
+
+```
+$appId					小米开放平台申请的AppId
+$appKey                                 小米开放平台申请的AppKey
+$appSecurity                            小米开放平台申请的AppSecurity             
+$fromAccount                            表示消息发送方成员号account(app账号)
+$fromResource                           表示用户设备的标识
+$toAccount                              表示消息接收方成员号account(app账号)
+$msg                                    表示发送的消息内容
+$topicId				表示群ID 
+```
+
+## 1） 推送单聊信息
+
++ HTTP 请求
+```
+curl http://mimc.chat.xiaomi.net/push/p2p/ -XPOST -d '{"appId":$appId, "appKey":$appKey，"appSecurity":$appSecurity, "fromAccount":$fromAccount, "fromResource":$fromResource, "toAccount":$toAccount, "msg":$msg}' -H "Content-Type: application/json"
+```
+
++ JSON结果
+```
+{
+	"code":200,
+	"data":{"packetId":"hjdibNDDzS-2"},
+	"message":"success"
+}
+```
+
+## 2）推送群聊信息
+
++ HTTP 请求
+```
+curl http://mimc.chat.xiaomi.net/push/p2t/ -XPOST -d '{"appId":$appId, "appKey":$appKey，"appSecurity":$appSecurity, "fromAccount":$fromAccount, "fromResource":$fromResource, "msg":$msg, "topicId":$topicId}' -H "Content-Type: application/json"
+```
+
++ JSON结果
+```
+{
+	"code":200,
+	"data":{"packetId":"hjdibNDDzS-2"},
+	"message":"success"
+}
+```
 
 # Topic API：
 
