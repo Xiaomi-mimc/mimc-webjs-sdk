@@ -93,6 +93,7 @@ $fromResource                           表示用户设备的标识
 $toAccount                              表示消息接收方成员号account(app账号)
 $msg                                    表示发送的消息内容
 $topicId				表示群ID 
+$packetId                               表示发送消息包ID
 ```
 
 ## 1） 推送单聊信息
