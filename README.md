@@ -87,7 +87,7 @@ APP开发者访问小米开放平台（dev.mi.com）申请appId/appKey/appSec。
 ```
 $appId					小米开放平台申请的AppId
 $appKey                                 小米开放平台申请的AppKey
-$appSecurity                            小米开放平台申请的AppSecurity             
+$appSecret                              小米开放平台申请的AppSecurity             
 $fromAccount                            表示消息发送方成员号account(app账号)
 $fromResource                           表示用户设备的标识
 $toAccount                              表示消息接收方成员号account(app账号)
