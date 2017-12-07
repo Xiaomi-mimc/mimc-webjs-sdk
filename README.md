@@ -116,7 +116,7 @@ curl https://mimc.chat.xiaomi.net/api/push/p2p/ -XPOST -d '{"appId":$appId, "app
 
 + HTTP 请求
 ```
-curl https://mimc.chat.xiaomi.net/api/push/p2t/ -XPOST -d '{"appId":$appId, "appKey":$appKey，"appSecurity":$appSecurity, "fromAccount":$fromAccount, "fromResource":$fromResource, "msg":$msg, "topicId":$topicId}' -H "Content-Type: application/json"
+curl https://mimc.chat.xiaomi.net/api/push/p2t/ -XPOST -d '{"appId":$appId, "appKey":$appKey，"appSecret":$appSecret, "fromAccount":$fromAccount, "fromResource":$fromResource, "msg":$msg, "topicId":$topicId}' -H "Content-Type: application/json"
 ```
 
 + JSON结果
