@@ -100,7 +100,7 @@ $packetId                               表示发送消息包ID
 
 + HTTP 请求
 ```
-curl https://mimc.chat.xiaomi.net/push/p2p/ -XPOST -d '{"appId":$appId, "appKey":$appKey，"appSecurity":$appSecurity, "fromAccount":$fromAccount, "fromResource":$fromResource, "toAccount":$toAccount, "msg":$msg}' -H "Content-Type: application/json"
+curl https://mimc.chat.xiaomi.net/api/push/p2p/ -XPOST -d '{"appId":$appId, "appKey":$appKey，"appSecurity":$appSecurity, "fromAccount":$fromAccount, "fromResource":$fromResource, "toAccount":$toAccount, "msg":$msg}' -H "Content-Type: application/json"
 ```
 
 + JSON结果
@@ -116,7 +116,7 @@ curl https://mimc.chat.xiaomi.net/push/p2p/ -XPOST -d '{"appId":$appId, "appKey"
 
 + HTTP 请求
 ```
-curl https://mimc.chat.xiaomi.net/push/p2t/ -XPOST -d '{"appId":$appId, "appKey":$appKey，"appSecurity":$appSecurity, "fromAccount":$fromAccount, "fromResource":$fromResource, "msg":$msg, "topicId":$topicId}' -H "Content-Type: application/json"
+curl https://mimc.chat.xiaomi.net/api/push/p2t/ -XPOST -d '{"appId":$appId, "appKey":$appKey，"appSecurity":$appSecurity, "fromAccount":$fromAccount, "fromResource":$fromResource, "msg":$msg, "topicId":$topicId}' -H "Content-Type: application/json"
 ```
 
 + JSON结果
