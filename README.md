@@ -97,7 +97,7 @@ $packetId               	String          	表示发送消息包ID
 ```
 ### PS：
 ```
-appId在JS中使用时，可能会产生精度消失，建议将此时的appId上传String类型
+appId在JS中使用时，会产生精度消失，此时的appId应该上传String类型
 ```
 
 ## 1） 推送单聊信息
@@ -162,7 +162,7 @@ $userToken1			String			表示userAccount1的token（广义上表示任意一个�
 
 ### PS：
 ```
-appId在JS中使用时，可能会产生精度消失，建议将此时的appId上传String类型
+appId在JS中使用时，会产生精度消失，此时的appId应该上传String类型
 token的获取使用User.getToken()方法
 uuid的获取使用User.getUuid()方法，uuid由MIMC根据($appId, $appAccount)生成，全局唯一
 ```
