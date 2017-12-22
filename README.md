@@ -85,15 +85,19 @@ APP开发者访问小米开放平台（dev.mi.com）申请appId/appKey/appSec。
 ## 下面的例子中所使用到的常量解释：(变量名称/类型/含义)
 
 ```
-$appId				String 			小米开放平台申请的AppId
+$appId				long 			小米开放平台申请的AppId
 $appKey                 	String          	小米开放平台申请的AppKey
 $appSecret             		String          	小米开放平台申请的AppSecret             
 $fromAccount            	String         		表示消息发送方成员号account(app账号)
 $fromResource           	String          	表示用户设备的标识
 $toAccount              	String    		表示消息接收方成员号account(app账号)
 $msg                    	String          	表示发送的消息内容
-$topicId			String 			表示群ID 
+$topicId			long 			表示群ID 
 $packetId               	String          	表示发送消息包ID
+```
+### PS：
+```
+appId在JS中使用时，可能会产生精度消失，建议将此时的appId上传String类型
 ```
 
 ## 1） 推送单聊信息
@@ -133,18 +137,18 @@ curl https://mimc.chat.xiaomi.net/api/push/p2t/ -XPOST -d '{"appId":$appId, "app
 ## 下面的例子中所使用到的常量解释：(变量名称/类型/含义)
 
 ```
-$appId				String			表示appId					
-$topicId			String 			表示群ID
+$appId				long			表示appId					
+$topicId			long 			表示群ID
 $topicName			String 			表示创建群的时候所指定的群名称
-$topicId1			String 			表示查询所属群信息时用户所加入群的群ID
-$topicId2			String 			表示查询所属群信息时用户所加入群的群ID
+$topicId1			long 			表示查询所属群信息时用户所加入群的群ID
+$topicId2			long 			表示查询所属群信息时用户所加入群的群ID
 $topicName1			String 			表示查询所属群信息时用户所加入群的群名称
 $topicName2			String 			表示查询所属群信息时用户所加入群的群名称
 $topicBulletin1			String 			表示查询所属群信息时用户所加入群的群公告
 $topicBulletin2			String			表示查询所属群信息时用户所加入群的群公告
 $newBulletin			String			表示更新群时设置的新群公告
 $newTopicName			String			表示更新群时设置的新群名称
-$ownerUuid			String			表示群主uuid
+$ownerUuid			long			表示群主uuid
 $ownerAccount			String			表示群主account(app账号)
 $ownerToken			String			表示群主token
 $userAccount1			String			表示群成员1号account(app账号)
@@ -152,12 +156,13 @@ $userAccount2			String			表示群成员2号account(app账号)
 $userAccount3			String			表示群成员3号account(app账号)
 $userAccount4			String			表示群成员4号account(app账号)
 $userAccount5			String			表示群成员5号account(app账号)
-$userUuid1			String			表示userAccount1的uuid（广义上表示任意一个群成员的uuid）
+$userUuid1			long			表示userAccount1的uuid（广义上表示任意一个群成员的uuid）
 $userToken1			String			表示userAccount1的token（广义上表示任意一个群成员的token）
 ```
 
 ### PS：
 ```
+appId在JS中使用时，可能会产生精度消失，建议将此时的appId上传String类型
 token的获取使用User.getToken()方法
 uuid的获取使用User.getUuid()方法，uuid由MIMC根据($appId, $appAccount)生成，全局唯一
 ```
