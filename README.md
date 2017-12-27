@@ -94,6 +94,7 @@ $fromAccount            	         	表示消息发送方成员号account(app账�
 $fromResource           	         	表示用户设备的标识
 $toAccount              	    		表示消息接收方成员号account(app账号)
 $msg                    	          	表示发送的消息内容
+$msgType                    	          	表示发送消息的类型
 $topicId			 		表示群ID 
 $packetId               	          	表示发送消息包ID
 ```
@@ -102,7 +103,7 @@ $packetId               	          	表示发送消息包ID
 
 + HTTP 请求
 ```
-curl https://mimc.chat.xiaomi.net/api/push/p2p/ -XPOST -d '{"appId":$appId, "appKey":$appKey，"appSecret":$appSecret, "fromAccount":$fromAccount, "fromResource":$fromResource, "toAccount":$toAccount, "msg":$msg}' -H "Content-Type: application/json"
+curl https://mimc.chat.xiaomi.net/api/push/p2p/ -XPOST -d '{"appId":$appId, "appKey":$appKey，"appSecret":$appSecret, "fromAccount":$fromAccount, "fromResource":$fromResource, "toAccount":$toAccount, "msg":$msg， "msgType":$msgType}' -H "Content-Type: application/json"
 ```
 
 + JSON结果
@@ -118,7 +119,7 @@ curl https://mimc.chat.xiaomi.net/api/push/p2p/ -XPOST -d '{"appId":$appId, "app
 
 + HTTP 请求
 ```
-curl https://mimc.chat.xiaomi.net/api/push/p2t/ -XPOST -d '{"appId":$appId, "appKey":$appKey，"appSecret":$appSecret, "fromAccount":$fromAccount, "fromResource":$fromResource, "msg":$msg, "topicId":$topicId}' -H "Content-Type: application/json"
+curl https://mimc.chat.xiaomi.net/api/push/p2t/ -XPOST -d '{"appId":$appId, "appKey":$appKey，"appSecret":$appSecret, "fromAccount":$fromAccount, "fromResource":$fromResource, "msg":$msg, "topicId":$topicId, "msgType":$msgType}' -H "Content-Type: application/json"
 ```
 
 + JSON结果
