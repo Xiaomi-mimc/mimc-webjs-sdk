@@ -167,7 +167,8 @@ $userToken1					表示userAccount1的token（广义上表示任意一个群成�
 ```
 token的获取使用User.getToken()方法。
 uuid的获取使用User.getUuid()方法，uuid由MIMC根据($appId, $appAccount)生成，全局唯一。
-身份认证有两种方式：1. token; 2. app信息,app帐号。当两种都存在时，优先验证前者。前者一般用于app客户端，后者一般用于app服务端。下面给出了这两种的使用方式。
+身份认证有两种方式：1. token（$ownerToken/$userToken1）; 2. app信息,app帐号（$appKey，$appSecret，$ownerAccount/$userAccount1）。
+当两种认证信息都存在时，优先验证前者。前者一般用于app客户端，后者一般用于app服务端。下面给出了这两种的使用方式。
 ```
 
 ## 1) 创建群(createTopic)：
