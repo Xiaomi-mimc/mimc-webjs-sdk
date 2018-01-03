@@ -93,7 +93,10 @@ $appSecret             		          	小米开放平台申请的AppSecret
 $fromAccount            	         	表示消息发送方成员号account(app账号)
 $fromResource           	         	表示用户设备的标识
 $toAccount              	    		表示消息接收方成员号account(app账号)
-$msg                    	          	表示发送的消息内容
+$msgType                    	          	表示发送消息的类型
+                                                msgType="base64": msg是base64编码后的数据，一般传输二进制数据时使用
+						msgType="":       msg是原始数据，一般传输String数据时使用
+$msg                    	          	表示发送的消息,参阅$msgType注释使用
 $topicId			 		表示群ID 
 $packetId               	          	表示发送消息包ID
 ```
@@ -102,7 +105,7 @@ $packetId               	          	表示发送消息包ID
 
 + HTTP 请求
 ```
-curl https://mimc.chat.xiaomi.net/api/push/p2p/ -XPOST -d '{"appId":$appId, "appKey":$appKey，"appSecret":$appSecret, "fromAccount":$fromAccount, "fromResource":$fromResource, "toAccount":$toAccount, "msg":$msg}' -H "Content-Type: application/json"
+curl https://mimc.chat.xiaomi.net/api/push/p2p/ -XPOST -d '{"appId":$appId, "appKey":$appKey，"appSecret":$appSecret, "fromAccount":$fromAccount, "fromResource":$fromResource, "toAccount":$toAccount, "msg":$msg， "msgType":$msgType}' -H "Content-Type: application/json"
 ```
 
 + JSON结果
@@ -118,7 +121,7 @@ curl https://mimc.chat.xiaomi.net/api/push/p2p/ -XPOST -d '{"appId":$appId, "app
 
 + HTTP 请求
 ```
-curl https://mimc.chat.xiaomi.net/api/push/p2t/ -XPOST -d '{"appId":$appId, "appKey":$appKey，"appSecret":$appSecret, "fromAccount":$fromAccount, "fromResource":$fromResource, "msg":$msg, "topicId":$topicId}' -H "Content-Type: application/json"
+curl https://mimc.chat.xiaomi.net/api/push/p2t/ -XPOST -d '{"appId":$appId, "appKey":$appKey，"appSecret":$appSecret, "fromAccount":$fromAccount, "fromResource":$fromResource, "msg":$msg, "topicId":$topicId, "msgType":$msgType}' -H "Content-Type: application/json"
 ```
 
 + JSON结果
@@ -135,7 +138,9 @@ curl https://mimc.chat.xiaomi.net/api/push/p2t/ -XPOST -d '{"appId":$appId, "app
 ## 下面的例子中所使用到的常量解释：(变量名称/含义)
 
 ```
-$appId						表示appId					
+$appId						小米开放平台申请的AppId
+$appKey                 	          	小米开放平台申请的AppKey
+$appSecret             		          	小米开放平台申请的AppSecret				
 $topicId			 		表示群ID
 $topicName			 		表示创建群的时候所指定的群名称
 $topicId1			 		表示查询所属群信息时用户所加入群的群ID
@@ -160,8 +165,10 @@ $userToken1					表示userAccount1的token（广义上表示任意一个群成�
 
 ### PS：
 ```
-token的获取使用User.getToken()方法
-uuid的获取使用User.getUuid()方法，uuid由MIMC根据($appId, $appAccount)生成，全局唯一
+token的获取使用User.getToken()方法。
+uuid的获取使用User.getUuid()方法，uuid由MIMC根据($appId, $appAccount)生成，全局唯一。
+身份认证有两种方式：1. token（$ownerToken/$userToken1）; 2. app信息,app帐号（$appKey，$appSecret，$ownerAccount/$userAccount1）。
+当两种认证信息都存在时，优先验证前者。前者一般用于app客户端，后者一般用于app服务端。下面给出了这两种的使用方式。
 ```
 
 ## 1) 创建群(createTopic)：
@@ -171,6 +178,8 @@ uuid的获取使用User.getUuid()方法，uuid由MIMC根据($appId, $appAccount)
 + HTTPS请求
 ```
 curl "https://mimc.chat.xiaomi.net/api/topic/$appId" -XPOST -d '{"topicName":$topicName,"accounts":"$userAccount1,$userAccount2,$userAccount3"}' -H "Content-Type: application/json" -H "token:$ownerToken"
+
+curl "https://mimc.chat.xiaomi.net/api/topic/$appId" -XPOST -d '{"topicName":$topicName,"accounts":"$userAccount1,$userAccount2,$userAccount3"}' -H "Content-Type: application/json" -H "appKey:$appKey" -H "appSecret:$appSecret" -H "appAccount:$ownerAccount"
 ```
 	
 + JSON结果
@@ -201,6 +210,8 @@ curl "https://mimc.chat.xiaomi.net/api/topic/$appId" -XPOST -d '{"topicName":$to
 + HTTPS请求
 ```
 curl "https://mimc.chat.xiaomi.net/api/topic/$appId/$topicId" -H "Content-Type: application/json" -H "token:$userToken1"
+
+curl "https://mimc.chat.xiaomi.net/api/topic/$appId/$topicId" -H "Content-Type: application/json" -H "appKey:$appKey" -H "appSecret:$appSecret" -H "appAccount:$userAccount1"
 ```
 
 + JSON结果
@@ -231,6 +242,8 @@ curl "https://mimc.chat.xiaomi.net/api/topic/$appId/$topicId" -H "Content-Type: 
 + HTTPS请求
 ```
 curl "https://mimc.chat.xiaomi.net/api/topic/$appId/account" -H "Content-Type: application/json" -H "token:$userToken1"
+
+curl "https://mimc.chat.xiaomi.net/api/topic/$appId/account" -H "Content-Type: application/json" -H "appKey:$appKey" -H "appSecret:$appSecret" -H "appAccount:$userAccount1"
 ```
 
 + JSON结果
@@ -262,6 +275,8 @@ curl "https://mimc.chat.xiaomi.net/api/topic/$appId/account" -H "Content-Type: a
 + HTTPS请求
 ```
 curl "https://mimc.chat.xiaomi.net/api/topic/$appId/$topicId/accounts" -XPOST -d '{"accounts":"$userAccount4,$userAccount5"}' -H "Content-Type: application/json" -H "token:$userToken1"
+
+curl "https://mimc.chat.xiaomi.net/api/topic/$appId/$topicId/accounts" -XPOST -d '{"accounts":"$userAccount4,$userAccount5"}' -H "Content-Type: application/json" -H "appKey:$appKey" -H "appSecret:$appSecret" -H "appAccount:$userAccount1"
 ```
 
 + JSON结果
@@ -294,6 +309,8 @@ curl "https://mimc.chat.xiaomi.net/api/topic/$appId/$topicId/accounts" -XPOST -d
 + HTTPS请求
 ```
 curl "https://mimc.chat.xiaomi.net/api/topic/$appId/$topicId/account" -XDELETE -H "Content-Type: application/json" -H "token:$userToken1"
+
+curl "https://mimc.chat.xiaomi.net/api/topic/$appId/$topicId/account" -XDELETE -H "Content-Type: application/json" -H "appKey:$appKey" -H "appSecret:$appSecret" -H "appAccount:$userAccount1"
 ```
 	
 + JSON结果
@@ -330,6 +347,8 @@ curl "https://mimc.chat.xiaomi.net/api/topic/$appId/$topicId/account" -XDELETE -
 + HTTPS请求
 ```
 curl "https://mimc.chat.xiaomi.net/api/topic/$appId/$topicId/accounts?accounts=$userAccount4,$userAccount5" -XDELETE -H "Content-Type: application/json" -H "token:$ownerToken"
+
+curl "https://mimc.chat.xiaomi.net/api/topic/$appId/$topicId/accounts?accounts=$userAccount4,$userAccount5" -XDELETE -H "Content-Type: application/json" -H "appKey:$appKey" -H "appSecret:$appSecret" -H "appAccount:$ownerAccount"
 ```
 	
 + JSON结果
@@ -359,6 +378,8 @@ curl "https://mimc.chat.xiaomi.net/api/topic/$appId/$topicId/accounts?accounts=$
 + HTTPS请求
 ```
 curl "https://mimc.chat.xiaomi.net/api/topic/$appId/$topicId" -XPUT -d '{"topicId":$topicId, "ownerUuid":$userUuid2,"topicName":$newTopicName,"bulletin":$newBulletin}' -H "Content-Type: application/json" -H "token:$ownerToken"
+
+curl "https://mimc.chat.xiaomi.net/api/topic/$appId/$topicId" -XPUT -d '{"topicId":$topicId, "ownerUuid":$userUuid2,"topicName":$newTopicName,"bulletin":$newBulletin}' -H "Content-Type: application/json" -H "appKey:$appKey" -H "appSecret:$appSecret" -H "appAccount:$ownerAccount"
 ```
 	
 + JSON结果
@@ -388,6 +409,8 @@ curl "https://mimc.chat.xiaomi.net/api/topic/$appId/$topicId" -XPUT -d '{"topicI
 + HTTPS请求
 ```
 curl "https://mimc.chat.xiaomi.net/api/topic/$appId/$topicId" -XDELETE -H "Content-Type: application/json" -H "token:$ownerToken"
+
+curl "https://mimc.chat.xiaomi.net/api/topic/$appId/$topicId" -XDELETE -H "Content-Type: application/json" -H "appKey:$appKey" -H "appSecret:$appSecret" -H "appAccount:$ownerAccount"
 ```
 
 + JSON结果
