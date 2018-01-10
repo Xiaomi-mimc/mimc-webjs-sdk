@@ -35,6 +35,7 @@
         mimc_appAccount = document.getElementById("loginUser").value;
         user = new MIMCUser(mimc_appId, mimc_appAccount);
         user.registerP2PMsgHandler(receiveP2PMsg);
+        user.registerGroupMsgHandler(receiveP2TMsg);
         user.registerFetchToken(fetchMIMCToken);
         user.registerStatusChange(statusChange);
         user.registerServerAckHandler(serverAck);
@@ -51,6 +52,10 @@
     }
 
     function receiveP2PMsg(message) {
+        writeToScreens(message.getFromAccount() + " to " + mimc_appAccount + ":" + message.getPayload());
+    }
+
+    function receiveP2TMsg(message) {
         writeToScreens(message.getFromAccount() + " to " + mimc_appAccount + ":" + message.getPayload());
     }
 
