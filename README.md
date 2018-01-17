@@ -237,7 +237,7 @@ curl "https://mimc.chat.xiaomi.net/api/topic/$appId/$topicId" -H "Content-Type: 
 }
 ```
 
-## 3) 查询所属群信息(queryTopic)：
+## 3) 查询所属群信息(queryAccountTopics)：
 
 #### 如下为$userAccount1查询加入的所有群信息
 
