@@ -52,8 +52,8 @@ APP开发者访问小米开放平台（dev.mi.com）申请appId/appKey/appSec。
      * @note: fetchToken()访问APP应用方自行实现的AppProxyService服务，该服务实现以下功能：
                     1. 存储appId/appKey/appSec（不应当存储在APP客户端）
                     2. 用户在APP系统内的合法鉴权
-                    3. 调用小米TokenService服务，并将小米TokenService服务返回结果通过fetchToken()原样返回
-     **/
+                    3. 调用小米TokenService服务，参考2)，并将小米TokenService服务返回结果通过fetchToken()原样返回，
+     **/
     }
 ## 6) 登录
     user.login();
