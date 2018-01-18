@@ -43,7 +43,7 @@ APP开发者访问小米开放平台（dev.mi.com）申请appId/appKey/appSec。
     user.registerFetchToken(fetchMIMCToken);         //获取token回调
     user.registerStatusChange(statusChange);         //登录结果回调
     user.registerServerAckHandler(serverAck);        //发送消息后，服务器接收到消息ack的回调
-	user.registerP2PMsgHandler(receiveP2PMsg);       //接收单聊消息回调
+    user.registerP2PMsgHandler(receiveP2PMsg);       //接收单聊消息回调
     user.registerDisconnHandler(disconnect);         //连接断开回调
 ## 5) 获取Token回调
 	function fetchMIMCToken() {
@@ -52,7 +52,7 @@ APP开发者访问小米开放平台（dev.mi.com）申请appId/appKey/appSec。
      * @note: fetchToken()访问APP应用方自行实现的AppProxyService服务，该服务实现以下功能：
                     1. 存储appId/appKey/appSec（不应当存储在APP客户端）
                     2. 用户在APP系统内的合法鉴权
-                    3. 调用小米TokenService服务，参考2)，并将小米TokenService服务返回结果通过fetchToken()原样返回，
+                    3. 调用小米TokenService服务，并将小米TokenService服务返回结果通过fetchToken()原样返回，
      **/
     }
 ## 6) 登录
