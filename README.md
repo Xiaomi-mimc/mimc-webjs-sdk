@@ -63,9 +63,10 @@ APP开发者访问小米开放平台（dev.mi.com）申请appId/appKey/appSec。
         //bindResult为bool类型登录结果
         //errType, errReason, errDesc为具体错误信息，string类型
     }
-## 8) 发送消息
+## 8) 发送单聊消息
     //返回值为packetId，message为用户自定义消息，utf-8 string类型
-    var packetId = user.sendMessage(appAccount, message);
+    var packetId = user.sendMessage(appAccount, message);
+#### PS：发送群聊消息暂不支持
 ## 9) 服务器Ack回调
     function serverAck(packetId) {
 	    //packetId与user.sendMessage的返回值相对应，表示packetId消息已发送成功
