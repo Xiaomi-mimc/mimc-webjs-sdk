@@ -13,52 +13,71 @@
     user.registerP2PMsgHandler(receiveP2PMsg);       //接收单聊消息回调
     user.registerDisconnHandler(disconnect);         //连接断开回调
 #### 1. 获取Token回调
-#### 参考 [详细文档](https://github.com/Xiaomi-mimc/operation-manual) 如何接入 & 安全认证
-    /**
-     * @return: 小米TokenService服务下发的原始数据
-     * @note: fetchToken()访问APP应用方自行实现的AppProxyService服务，该服务实现以下功能：
-                    1. 存储appId/appKey/appSec（不应当存储在APP客户端）
-                    2. 用户在APP系统内的合法鉴权
-		        3. 调用小米TokenService服务，参考{ 2) 获取Token }
-		        并将小米TokenService服务返回结果通过fetchToken()原样返回 **/
-    function fetchMIMCToken() { 
-        //App developer implement 
-    }
+#### 参考 [详细文档](https://github.com/Xiaomi-mimc/operation-manual) 如何接入 & 安全认证，实现以下API： 
+```
+    function fetchMIMCToken() { 
+        // 访问AppProxyService，从返回数据中获取[小米TokenService返回的原始数据]并直接返回
+    }
+```
 #### 2. 在线状态变化回调
+```
+    /**
+     * @param[bindResult] bool: true/false 表示登录成功/失败
+     * @param[errType] string: 登录失败类型
+     * @param[errReason] string: 登录失败原因
+     * @param[errDesc] string: 登录失败描述
+     **/
     function statusChange(bindResult, errType, errReason, errDesc) {
-        //bindResult为bool类型登录结果
-        //errType, errReason, errDesc为具体错误信息，string类型
     }
+```
 #### 3. 服务器Ack回调
+```
+    /**
+     * @param[packetId] string: 成功发送到服务器消息的packetId，即sendMessage(,)的返回值
+     **/
     function serverAck(packetId) {
-	    //packetId与user.sendMessage的返回值相对应，表示packetId消息已发送成功
-	}
+    }
+```
 #### 4. 接收消息回调
+```
+    /**
+     * @param[receiveP2PMsg] object: 接收到的P2P消息体 
+     **/
     function registerP2PMsgHandler(receiveP2PMsg) {
-        receiveP2PMsg.getPacketId();
-        receiveP2PMsg.getSequence();
-        receiveP2PMsg.getFromAccount();
-        receiveP2PMsg.getPayload();//payload为用户自定义消息，utf-8 string类型
+        receiveP2PMsg.getPacketId(); // 客户端生成的消息ID
+        receiveP2PMsg.getSequence(); // 由服务器生成，用于去重排序(升序)
+        receiveP2PMsg.getFromAccount(); // 消息发送者在APP帐号系统的帐号ID
+        receiveP2PMsg.getPayload(); // payload为用户自定义消息，utf-8 string类型
     }  
+```
 #### 5. 连接断开回调
+```
     function disconnect() {
-	    //连接断开后需要重新登录
-	}
+    }
+```
 	
 ## 3) 登录
+```
     user.login();
+```
   
 ## 4) 发送单聊消息
-    //返回值为packetId，message为用户自定义消息，utf-8 string类型
+```
+    /**
+     * @param[appAccount] string: 消息接收者在App帐号系统的帐号ID
+     * @param[message] string utf8: 用户自定义消息体
+     # @return string: 由客户端生成的消息ID
+     **/
     var packetId = user.sendMessage(appAccount, message);
-
+```
 ## 5) 发送群聊消息
 ```
 暂不支持
 ```
 
 ## 6) 注销
+```
     user.logout();
-
+```
 
 [回到顶部](#readme)
