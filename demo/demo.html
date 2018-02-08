@@ -2,7 +2,7 @@
 <meta charset="utf-8" />  
 <title>WebSocket Test</title>
 <script type="text/javascript" src="../sdk/mimc-min_1_0_0.js"></script>
-<script language="javascript"type="text/javascript">        
+<script language="javascript"type="text/javascript">
     mimc_appId = "2882303761517669588";
     mimc_appSecret = "b0L3IOz/9Ob809v8H2FbVg==";
     mimc_appKey = "5111766983588";
@@ -62,7 +62,11 @@
     function sendMsg() {
         var toUser = document.getElementById("username").value;
         var message = document.getElementById("sendmessage").value;
-        var packetId = user.sendMessage(toUser, message);
+        try {
+            var packetId = user.sendMessage(toUser, message);
+        } catch (err) {
+            console.log("sendMessage fail, err=" + err);
+        }
         writeToScreens(mimc_appAccount + " to " + toUser + ":" + message);
     }
 
