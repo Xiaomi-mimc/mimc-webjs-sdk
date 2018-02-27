@@ -52,11 +52,13 @@
     }
 
     function receiveP2PMsg(message) {
+        writeToScreens("time: " + message.getTimeStamp());
         writeToScreens(message.getFromAccount() + " to " + mimc_appAccount + ":" + message.getPayload());
     }
 
     function receiveP2TMsg(message) {
-        writeToScreens(message.getFromAccount() + " to " + mimc_appAccount + ":" + message.getPayload());
+        writeToScreens("time: " + message.getTimeStamp());
+        writeToScreens(message.getTopicId() + " " + message.getFromAccount() + ":" + message.getPayload());
     }
 
     function sendMsg() {
@@ -84,8 +86,8 @@
         var packetId = result.data.packetId;
     }
 
-    function serverAck(packetId) {
-        //writeToScreens("receive msg ack:" + packetId);
+    function serverAck(packetId, sequence, timeStamp) {
+        //writeToScreens("receive msg ack:" + packetId + ",sequence=" + sequence + ",ts=" + timeStamp);
         return;
     }
 
@@ -95,6 +97,61 @@
 
     function logout() {
         user.logout();
+    }
+    
+    function createGroup() {
+        var topicName = document.getElementById("groupName").value;
+        var groupMem = document.getElementById("groupMem").value;
+        var data = {topicName:topicName,accounts:groupMem};
+        var url = 'https://mimc.chat.xiaomi.net/api/topic/' + mimc_appId;
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', url, false);
+        xhr.setRequestHeader('content-type', 'application/json');
+        xhr.setRequestHeader('appKey', mimc_appKey);
+        xhr.setRequestHeader('appSecret', mimc_appSecret);
+        xhr.setRequestHeader('appAccount', mimc_appAccount);
+        xhr.send(JSON.stringify(data));
+
+        var result = JSON.parse(xhr.response);
+        if (200 !== result.code) {
+            writeToScreens("create group failed,msg=" + result.message);
+            return;
+        }
+
+        writeToScreens("group name=" + result.data.topicInfo.topicName + ",topicId=" + result.data.topicInfo.topicId);
+    }
+    
+    function queryGroupInfo() {
+        var url = 'https://mimc.chat.xiaomi.net/api/topic/' + mimc_appId + '/account';
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, false);
+        xhr.setRequestHeader('content-type', 'application/json');
+        xhr.setRequestHeader('appKey', mimc_appKey);
+        xhr.setRequestHeader('appSecret', mimc_appSecret);
+        xhr.setRequestHeader('appAccount', mimc_appAccount);
+        xhr.send();
+
+        var result = JSON.parse(xhr.response);
+        if (200 !== result.code) {
+            writeToScreens("create group failed,msg=" + result.message);
+            return;
+        }
+
+        for (var i = 0; i < result.data.length; i++) {
+            writeToScreens("group name=" + result.data[i].topicName + ",topic id=" + result.data[i].topicId);
+        }
+    }
+
+    function sendGroupMsg() {
+        var topicId = document.getElementById("topicId").value;
+        var groupMsg = document.getElementById("groupMessage").value;
+        try {
+            var packetId = user.sendGroupMessage(topicId, groupMsg);
+        } catch (err) {
+            console.log("sendGroupMessage fail, err=" + err);
+        }
+        writeToScreens(mimc_appAccount + " to " + topicId + ":" + groupMsg);
     }
 
     function writeToScreens(message) {
@@ -120,8 +177,25 @@
     <button id="button1" onclick="sendMsg()">发送</button>
     <button id="buttonpush" onclick="pushMsg()">推送</button>
 </div>
-<div id="login">
+<div id="logout">
     <button id="button3" onclick="logout()">退出登录</button>
+</div>
+<div id="group">
+    <label>群名称：</label>
+    <input id="groupName" type="text" />
+    <label>群用户(多个用户以“,”分隔)：</label>
+    <input id="groupMem" type="text" />
+    <button id="button4" onclick="createGroup()">创建群</button>
+</div>
+<div id="groupInfo">
+    <button id="button6" onclick="queryGroupInfo()">所在群信息</button>
+</div>
+<div id="sendGroup">
+    <label>topic id：</label>
+    <input id="topicId" type="text" />
+    <label>群消息：</label>
+    <input id="groupMessage" type="text" />
+    <button id="button5" onclick="sendGroupMsg()">发送</button>
 </div>
 <div id="output"></div>  
 </html>

@@ -25,6 +25,7 @@
     user.registerStatusChange(statusChange);         //登录结果回调
     user.registerServerAckHandler(serverAck);        //发送消息后，服务器接收到消息ack的回调
     user.registerP2PMsgHandler(receiveP2PMsg);       //接收单聊消息回调
+    user.registerGroupMsgHandler(receiveP2TMsg);     //接收群聊消息回调
     user.registerDisconnHandler(disconnect);         //连接断开回调
 
 ## 安全认证
@@ -63,27 +64,50 @@
 ```
 ## 发送群聊消息
 ```
-暂不支持
+    /**
+     * @param[groupId] string: 群ID，也成为topicId
+     * @param[message] string utf8: 用户自定义消息体
+     # @return string: 由客户端生成的消息ID
+     **/
+    var packetId = user.sendMessage(groupId, message);
 ```
 
 ## 服务器响应回调
 ```
     /**
      * @param[packetId] string: 成功发送到服务器消息的packetId，即sendMessage(,)的返回值
+     * @param[sequence] string: 服务器生成，单用户空间内递增唯一，可用于排序（升序）/去重
+     * @param[timeStamp] string: 消息到达服务器时间（ms）
      **/
-    function serverAck(packetId) {
+    function serverAck(packetId, sequence, timeStamp) {
     }
 ```
 ## 接收消息回调
 ```
     /**
-     * @param[receiveP2PMsg] object: 接收到的P2P消息体 
+     * @param[P2PMsg] object: 接收到的P2P消息体 
      **/
-    function registerP2PMsgHandler(receiveP2PMsg) {
-        receiveP2PMsg.getPacketId(); // 客户端生成的消息ID
-        receiveP2PMsg.getSequence(); // 由服务器生成，单用户空间内递增唯一，用于去重排序(升序)
-        receiveP2PMsg.getFromAccount(); // 消息发送者在APP帐号系统的帐号ID
-        receiveP2PMsg.getPayload(); // payload为用户自定义消息，utf-8 string类型
+    function receiveP2PMsg(P2PMsg) {
+        P2PMsg.getPacketId(); // 客户端生成的消息ID
+        P2PMsg.getSequence(); // 由服务器生成，用于去重排序(升序)
+        P2PMsg.getFromAccount(); // 消息发送者在APP帐号系统的帐号ID
+        P2PMsg.getTimeStamp(); // 消息发送时间戳
+        P2PMsg.getPayload(); // payload为用户自定义消息，utf-8 string类型
+    }   
+```
+## 接收群聊消息回调
+```
+    /**
+     * @param[P2TMsg] object: 接收到的P2T消息体 
+     **/
+
+    function receiveP2TMsg(P2TMsg) {
+        P2TMsg.getPacketId(); // 客户端生成的消息ID
+        P2TMsg.getSequence(); // 由服务器生成，用于去重排序(升序)
+        P2TMsg.getFromAccount(); // 消息发送者在APP帐号系统的帐号ID
+        P2TMsg.getTopicId(); // 群ID
+        P2TMsg.getTimeStamp(); // 消息发送时间戳
+        P2TMsg.getPayload(); // payload为用户自定义消息，utf-8 string类型
     }  
 ```
 ## 连接断开回调
