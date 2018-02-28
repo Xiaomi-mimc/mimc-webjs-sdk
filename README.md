@@ -81,7 +81,7 @@
      **/
     function registerP2PMsgHandler(receiveP2PMsg) {
         receiveP2PMsg.getPacketId(); // 客户端生成的消息ID
-        receiveP2PMsg.getSequence(); // 由服务器生成，用于去重排序(升序)
+        receiveP2PMsg.getSequence(); // 由服务器生成，单用户空间内递增唯一，用于去重排序(升序)
         receiveP2PMsg.getFromAccount(); // 消息发送者在APP帐号系统的帐号ID
         receiveP2PMsg.getPayload(); // payload为用户自定义消息，utf-8 string类型
     }  
