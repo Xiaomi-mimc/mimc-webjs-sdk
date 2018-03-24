@@ -58,18 +58,20 @@
     /**
      * @param[appAccount] string: 消息接收者在App帐号系统的帐号ID
      * @param[message] string utf8: 用户自定义消息体
+     * @param[isStore] bool: 消息是否存储在mimc服务端，true 存储, false 不存储, 默认存储
      # @return string: 由客户端生成的消息ID
      **/
-    var packetId = user.sendMessage(appAccount, message);
+    var packetId = user.sendMessage(appAccount, message, isStore);
 ```
 ## 发送群聊消息
 ```
     /**
      * @param[groupId] string: 群ID，也成为topicId
      * @param[message] string utf8: 用户自定义消息体
+     * @param[isStore] bool: 消息是否存储在mimc服务端，true 存储, false 不存储, 默认存储
      # @return string: 由客户端生成的消息ID
      **/
-    var packetId = user.sendMessage(groupId, message);
+    var packetId = user.sendMessage(groupId, message, isStore);
 ```
 
 ## 服务器响应回调
@@ -78,8 +80,9 @@
      * @param[packetId] string: 成功发送到服务器消息的packetId，即sendMessage(,)的返回值
      * @param[sequence] string: 服务器生成，单用户空间内递增唯一，可用于排序（升序）/去重
      * @param[timeStamp] string: 消息到达服务器时间（ms）
+     * @param[errMsg] string: 服务器返回的错误信息
      **/
-    function serverAck(packetId, sequence, timeStamp) {
+    function serverAck(packetId, sequence, timeStamp, errMsg) {
     }
 ```
 ## 接收消息回调
