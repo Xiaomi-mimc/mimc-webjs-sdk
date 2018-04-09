@@ -52,12 +52,14 @@
     }
 
     function receiveP2PMsg(message) {
-        writeToScreens("time: " + message.getTimeStamp());
+        var date = new Date(parseInt(message.getTimeStamp()));
+        writeToScreens("time: " + date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + " " + date.getMilliseconds());
         writeToScreens(message.getFromAccount() + " to " + mimc_appAccount + ":" + message.getPayload());
     }
 
     function receiveP2TMsg(message) {
-        writeToScreens("time: " + message.getTimeStamp());
+        var date = new Date(parseInt(message.getTimeStamp()));
+        writeToScreens("time: " + date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + " " + date.getMilliseconds());
         writeToScreens(message.getTopicId() + " " + message.getFromAccount() + ":" + message.getPayload());
     }
 
