@@ -20,7 +20,7 @@
 ```
     
 ## 用户初始化
-    user = new MIMCUser(appId, appAccount);
+    user = new MIMCUser(appAccount);
     user.registerFetchToken(fetchMIMCToken);         //获取token回调
     user.registerStatusChange(statusChange);         //登录结果回调
     user.registerServerAckHandler(serverAck);        //发送消息后，服务器接收到消息ack的回调

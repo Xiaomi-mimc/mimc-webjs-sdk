@@ -33,7 +33,7 @@
 
     function login() {
         mimc_appAccount = document.getElementById("loginUser").value;
-        user = new MIMCUser(mimc_appId, mimc_appAccount);
+        user = new MIMCUser(mimc_appAccount);
         user.registerP2PMsgHandler(receiveP2PMsg);
         user.registerGroupMsgHandler(receiveP2TMsg);
         user.registerFetchToken(fetchMIMCToken);
