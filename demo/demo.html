@@ -55,8 +55,8 @@
         writeToScreens("uc dismiss:" + topicId);
     }
 
-    function ucJoinResp(topicId, code, msg) {
-        writeToScreens("uc join:" + topicId + ",code=" + code + ",msg=" + msg);
+    function ucJoinResp(topicId, code, msg, context) {
+        writeToScreens("uc join:" + topicId + ",code=" + code + ",msg=" + msg + ",context=" + context);
     }
 
     function ucMessage(groupMsg) {
@@ -66,43 +66,47 @@
         writeToScreens(groupMsg.getTopicId() + " " + groupMsg.getFromAccount() + ":" + groupMsg.getPayload());
     }
 
-    function ucQuitResp(topicId, code, msg) {
-        writeToScreens("uc quit:" + topicId + ",code=" + code + ",msg=" + msg);
+    function ucQuitResp(topicId, code, msg, context) {
+        writeToScreens("uc quit:" + topicId + ",code=" + code + ",msg=" + msg + ",context=" + context);
     }
 
     function createUCGroup() {
         var groupName = document.getElementById("topicName").value;
-        user.createUnlimitedGroup(groupName, createUCGroupCB);
+        var context = "testtest";
+        user.createUnlimitedGroup(groupName, createUCGroupCB, context);
     }
 
-    function createUCGroupCB(topicId, topicName, isSuccess, errMsg) {
+    function createUCGroupCB(topicId, topicName, isSuccess, errMsg, context) {
         if (isSuccess) {
-            console.log("group " + topicName + " created success. topicId = " + topicId);
+            console.log("group " + topicName + " created success. topicId = " + topicId + ",context=" + context);
         } else {
-            console.log("group " + topicName + " created failed, err=" + errMsg);
+            console.log("group " + topicName + " created failed, err=" + errMsg + ",context=" + context);
         }
     }
 
     function joinUCGroup() {
         var topicID = document.getElementById("ucTopicId").value;
-        user.joinUnlimitedGroup(topicID);
+        var context = "testtest";
+        user.joinUnlimitedGroup(topicID, context);
     }
 
     function quitUCGroup() {
         var topicID = document.getElementById("ucTopicId3").value;
-        user.quitUnlimitedGroup(topicID);
+        var context = "testtest";
+        user.quitUnlimitedGroup(topicID, context);
     }
 
     function dismissUCGroup() {
         var topicID = document.getElementById("ucTopicId4").value;
-        user.dismissUnlimitedGroup(topicID, dismissUCGroupCB);
+        var context = "testtest";
+        user.dismissUnlimitedGroup(topicID, dismissUCGroupCB, context);
     }
 
-    function dismissUCGroupCB(isSuccess, topicId) {
+    function dismissUCGroupCB(isSuccess, topicId, context) {
         if (isSuccess) {
-            writeToScreens("dismiss group:" + topicId);
+            writeToScreens("dismiss group:" + topicId + ",context=" + context);
         } else {
-            writeToScreens("dismiss group " + topicId + " failed");
+            writeToScreens("dismiss group " + topicId + " failed" + ",context=" + context);
         }
     }
 
