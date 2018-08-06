@@ -239,8 +239,15 @@
     function pushMsg() {
         var toUser = document.getElementById("username").value;
         var message = document.getElementById("sendmessage").value;
+        var a = new Base64();
+        var message_ = a.encode(message);
+        jsonMsg = String(JSON.stringify({version: 0,
+            msgId: "TEXT_1234",
+            msgType: 103,
+            timestamp: String((new Date()).valueOf()),
+            content: message_}));
 
-        var pushData = {appId:mimc_appId, appKey:mimc_appKey, appSecret:mimc_appSecret, fromAccount:mimc_appAccount, fromResource:"resWeb", toAccount:toUser, msg:message};
+        var pushData = {appId:mimc_appId, appKey:mimc_appKey, appSecret:mimc_appSecret, fromAccount:mimc_appAccount, fromResource:"resWeb", toAccount:toUser, msg:jsonMsg};
         var result = httpRequest('https://mimc.chat.xiaomi.net/api/push/p2p/', pushData);
         writeToScreens(mimc_appAccount + " to " + toUser + ":" + message);
         if (200 !== result.code) {
