@@ -63,6 +63,7 @@
         console.log("recv uc msg:");
         var date = new Date(parseInt(groupMsg.getTimeStamp()));
         writeToScreens("time: " + date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + " " + date.getMilliseconds());
+        writeToScreens("packetid="+groupMsg.getPacketId());
         writeToScreens(groupMsg.getTopicId() + " " + groupMsg.getFromAccount() + ":" + groupMsg.getPayload());
     }
 
@@ -191,7 +192,7 @@
     function sendUCMsg() {
         var topicID = document.getElementById("ucTopicId1").value;
         var msg = document.getElementById("msgId").value;
-        user.sendUnlimitedGroupMessage(topicID, msg);
+        var packetid = user.sendUnlimitedGroupMessage(topicID, msg);
     }
 
     function statusChange(bindResult, errType, errReason, errDesc) {
