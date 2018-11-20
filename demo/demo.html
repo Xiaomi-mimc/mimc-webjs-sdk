@@ -61,6 +61,7 @@
 
     function ucMessage(groupMsg) {
         console.log("recv uc msg:");
+        console.log("biztype=" + groupMsg.getBizType());
         var date = new Date(parseInt(groupMsg.getTimeStamp()));
         writeToScreens("time: " + date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + " " + date.getMilliseconds());
         writeToScreens("packetid="+groupMsg.getPacketId());
@@ -192,7 +193,8 @@
     function sendUCMsg() {
         var topicID = document.getElementById("ucTopicId1").value;
         var msg = document.getElementById("msgId").value;
-        var packetid = user.sendUnlimitedGroupMessage(topicID, msg);
+        var type = "txt";
+        var packetid = user.sendUnlimitedGroupMessage(topicID, msg, type);
     }
 
     function statusChange(bindResult, errType, errReason, errDesc) {
@@ -207,7 +209,7 @@
         var date = new Date(parseInt(message.getTimeStamp()));
         writeToScreens("time: " + date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + " " + date.getMilliseconds());
         var disMsg = new Base64();
-		console.log(JSON.stringify(JSON.parse(message.getPayload())));
+		console.log("biztype=" + message.getBizType());
 		writeToScreens(message.getFromAccount() + " to " + mimc_appAccount + ":" + disMsg.decode(JSON.parse(message.getPayload()).content));
     }
 
@@ -215,6 +217,7 @@
         var date = new Date(parseInt(message.getTimeStamp()));
         writeToScreens("time: " + date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + " " + date.getMilliseconds());
         var disMsg = new Base64();
+        console.log("biztype=" + message.getBizType());
 		writeToScreens(message.getTopicId() + " " + message.getFromAccount() + ":" + disMsg.decode(JSON.parse(message.getPayload()).content));
     }
 
@@ -326,7 +329,7 @@
 						timestamp: String((new Date()).valueOf()),
 						content: groupMsg_}));
         try {
-            var packetId = user.sendGroupMessage(topicId, jsonMsg);
+            var packetId = user.sendGroupMessage(topicId, jsonMsg, "json");
         } catch (err) {
             console.log("sendGroupMessage fail, err=" + err);
         }
@@ -367,7 +370,7 @@ function Base64() {
             _keyStr.charAt(enc3) + _keyStr.charAt(enc4);
         }
         return output;
-    }
+    };
  
     
     this.decode = function (input) {
@@ -394,7 +397,7 @@ function Base64() {
         }
         output = _utf8_decode(output);
         return output;
-    }
+    };
  
     _utf8_encode = function (string) {
         string = string.replace(/\r\n/g,"\n");
@@ -414,7 +417,7 @@ function Base64() {
  
         }
         return utftext;
-    }
+    };
  
     _utf8_decode = function (utftext) {
         var string = "";
