@@ -25,10 +25,16 @@ function MIMCUser(appAccount, res) {
     var appId = "";
     var packetIdCount = 0;
     var wsUri = "wss://wsapp.chat.xiaomi.net";
+    //var wsUri = "ws://10.38.162.117:5222";
+    var ucurl = 'https://mimc.chat.xiaomi.net/api/uctopic';
+    //var ucurl = 'http://10.38.162.149/api/uctopic';
     var loginState = false;
     var resource = "";
+    var userToken = "";
     var websocket;
-    var intervalId;
+    var intervalId, ucIntervalId;
+    var ucTopicList = new Array();
+    var contextMap = new Map();
     if (arguments[2]) {
         resource = res;
     } else {
@@ -40,8 +46,11 @@ function MIMCUser(appAccount, res) {
         }
     }
     var msgHandler, groupMsgHandler, serverAckHandler, fetchMIMCToken, statusChange, disconnectHandler;
+    var ucJoinRespHandler, ucQuitRespHandler, ucMsgHandler, ucDismissHandler;
     var challenge, securityKey, packetName;
     var recvSequence = new Set();
+
+    var queryUCId = setInterval(queryUCGroup, 1000);
 
     //msgHandler(message),message为MIMCMessage类型
     this.registerP2PMsgHandler = function (func) {
@@ -73,6 +82,36 @@ function MIMCUser(appAccount, res) {
         disconnectHandler = func;
     };
 
+    this.registerUCJoinRespHandler = function (func) {
+        ucJoinRespHandler = func;
+    };
+
+    this.registerUCQuitRespHandler = function (func) {
+        ucQuitRespHandler = func;
+    };
+
+    this.registerUCMsgHandler = function (func) {
+        ucMsgHandler = func;
+    };
+
+    this.registerUCDismissHandler = function (func) {
+        ucDismissHandler = func;
+    };
+
+    this.getToken = function () {
+        if (loginState === false) {
+            console.log("user not login, token is null.");
+        }
+        return userToken;
+    };
+
+    this.getUuid = function () {
+        if (loginState === false) {
+            console.log("user not login, uuid is null.");
+        }
+        return uuid;
+    };
+
     function initWebsocket() {
         websocket = new WebSocket(wsUri);
         websocket.onopen = function(evt) {
@@ -101,6 +140,8 @@ function MIMCUser(appAccount, res) {
         }
         loginState = false;
         clearInterval(intervalId);
+        clearInterval(ucIntervalId);
+        clearInterval(queryUCId);
     }
 
     function onMessage(evt) {
@@ -113,14 +154,25 @@ function MIMCUser(appAccount, res) {
 
     function onError(evt) {
         clearInterval(intervalId);
+        clearInterval(ucIntervalId);
+        clearInterval(queryUCId);
+        console.log("init websocket err.");
     }
 
     function sendWSMessage(wsMessage) {
-        websocket.send(wsMessage);
+        try {
+            websocket.send(wsMessage);
+        } catch(err) {
+            console.log("websocket send err=" + err);
+        }
     }
 
     function closeWebsocket() {
-        websocket.close();
+        try {
+            websocket.close();
+        } catch(err) {
+            console.log("websocket close err=" + err);
+        }
     }
 
     this.login = function() {
@@ -178,6 +230,14 @@ function MIMCUser(appAccount, res) {
         appId = tokenInfo.data.appId;
         securityKey = atob(tokenInfo.data.miUserSecurityKey);
         packetName = tokenInfo.data.appPackage;
+        userToken = tokenInfo.data.token;
+        var token_appAccount = tokenInfo.data.appAccount;
+        if (appAccount !== token_appAccount) {
+            var err_reason = "app account(" + appAccount + ") is not same from the account(" + token_appAccount + ") get from token";
+            console.log(err_reason);
+            statusChange(false, null, "account not same", err_reason);
+            return;
+        }
 
         var headerId = generateHeaderId();
         var paramMap = new Map();
@@ -216,6 +276,10 @@ function MIMCUser(appAccount, res) {
     }
 
     this.sendMessage = function (toUser, singleMessage, isStore = true) {
+        return this.sendMessage(toUser, singleMessage, "", isStore);
+    };
+
+    this.sendMessage = function (toUser, singleMessage, bizType, isStore = true) {
         if (loginState === false) {
             console.log("user not login.");
             throw "user not login";
@@ -240,6 +304,7 @@ function MIMCUser(appAccount, res) {
         p2pMessage.setTo(userTo);
         p2pMessage.setPayload(encodeUTF8(singleMessage));
         p2pMessage.setIsstore(isStore);
+        p2pMessage.setBiztype(bizType);
 
         var packetId = generateHeaderId();
         var mimcPacket = new proto.MIMCPacket();
@@ -254,7 +319,11 @@ function MIMCUser(appAccount, res) {
         return packetId;
     };
 
-    this.sendGroupMessage = function (groutId, groupMessage, isStore = true) {
+    this.sendGroupMessage = function (groutId, groupMessage, isStore = true){
+        return this.sendGroupMessage(groutId, groupMessage, "", isStore);
+    };
+
+    this.sendGroupMessage = function (groutId, groupMessage, bizType, isStore = true) {
         if (loginState === false) {
             console.log("user not login.");
             throw "user not login.";
@@ -279,6 +348,7 @@ function MIMCUser(appAccount, res) {
         p2tMessage.setTo(groupTo);
         p2tMessage.setPayload(encodeUTF8(groupMessage));
         p2tMessage.setIsstore(isStore);
+        p2tMessage.setBiztype(bizType);
 
         var packetId = generateHeaderId();
         var mimcPacket = new proto.MIMCPacket();
@@ -318,6 +388,222 @@ function MIMCUser(appAccount, res) {
 
         return packetId;
     };
+
+
+    this.createUnlimitedGroup = function (topicName, callback, context) {
+        if (loginState === false) {
+            console.log("user not login.");
+            throw "user not login.";
+        }
+
+        var data = {topicName:topicName};
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', ucurl, true);
+        xhr.setRequestHeader('content-type', 'application/json');
+        xhr.setRequestHeader('token', userToken);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                var result = JSON.parse(xhr.response);
+                if (result.code === 200 && result.message === "success") {
+                    var topicId = result.data.topicId;
+                    var ucGroup = new proto.UCGroup();
+                    ucGroup.setAppid(appId);
+                    ucGroup.setTopicid(topicId);
+                    var ucJoin = new proto.UCJoin();
+                    ucJoin.setGroup(ucGroup);
+                    sendUCPacket(ucJoin.serializeBinary(), proto.UC_MSG_TYPE.JOIN, generateHeaderId());
+                    contextMap.set(topicId, context);
+
+                    callback(topicId, topicName, true, "", context);
+                } else {
+                    console.log("create uc group failed,code=" + result.code + ",message=" + result.message);
+                    callback(0, topicName, false, result.message, context);
+                }
+            } else if (xhr.status !== 200){
+                console.log("create uc group failed,readyState=" + xhr.readyState + ",status=" + xhr.status);
+                callback(0, topicName, false, "readyState=" + xhr.readyState + ",status=" + xhr.status, context);
+            }
+        };
+        xhr.send(JSON.stringify(data));
+    };
+
+    this.dismissUnlimitedGroup = function (topicId, callback, context) {
+        if (loginState === false) {
+            console.log("user not login.");
+            throw "user not login.";
+        }
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('DELETE', ucurl, true);
+        xhr.setRequestHeader('content-type', 'application/json');
+        xhr.setRequestHeader('token', userToken);
+        xhr.setRequestHeader('topicId', topicId);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                var result = JSON.parse(xhr.response);
+                if (result.code === 200 && result.message === "success") {
+                    for (var i = 0; i < ucTopicList.length; i++) {
+                        if (ucTopicList[i] === topicId) {
+                            ucTopicList.slice(i, 1);
+                        }
+                    }
+                    callback(true, topicId, context);
+                } else {
+                    console.log("dismiss uc group failed,code=" + result.code + ",message=" + result.message);
+                    callback(false, topicId, context);
+                }
+            } else if (xhr.status !== 200){
+                console.log("dismiss uc group failed,readyState=" + xhr.readyState + ",status=" + xhr.status);
+                callback(false, topicId, context);
+            }
+        };
+        xhr.send();
+    };
+
+    this.joinUnlimitedGroup = function (topicId, context) {
+        if (loginState === false) {
+            console.log("user not login.");
+            throw "user not login.";
+        }
+        contextMap.set(topicId, context);
+
+        var ucGroup = new proto.UCGroup();
+        ucGroup.setAppid(appId);
+        ucGroup.setTopicid(topicId);
+        var ucJoin = new proto.UCJoin();
+        ucJoin.setGroup(ucGroup);
+
+        return sendUCPacket(ucJoin.serializeBinary(), proto.UC_MSG_TYPE.JOIN, generateHeaderId());
+    };
+
+    this.quitUnlimitedGroup = function (topicId, context) {
+        if (loginState === false) {
+            console.log("user not login.");
+            throw "user not login.";
+        }
+        contextMap.set(topicId, context);
+
+        var ucGroup = new proto.UCGroup();
+        ucGroup.setAppid(appId);
+        ucGroup.setTopicid(topicId);
+        var ucQuit = new proto.UCQuit();
+        ucQuit.setGroup(ucGroup);
+
+        return sendUCPacket(ucQuit.serializeBinary(), proto.UC_MSG_TYPE.QUIT, generateHeaderId());
+    };
+
+    this.sendUnlimitedGroupMessage = function (topicId, msg, isStore = false) {
+        return this.sendUnlimitedGroupMessage(topicId, msg, "", isStore);
+    };
+
+    this.sendUnlimitedGroupMessage = function (topicId, msg, bizType, isStore = false) {
+        if (loginState === false) {
+            console.log("user not login.");
+            throw "user not login.";
+        }
+
+        if (msg.length > 10 * 1024) {
+            console.log("packet len > 10k");
+            throw "packet len > 10k";
+        }
+
+        var userFrom = new proto.MIMCUser();
+        userFrom.setAppid(appId);
+        userFrom.setAppaccount(appAccount);
+        userFrom.setUuid(uuid);
+        userFrom.setResource(resource);
+        var ucGroup = new proto.UCGroup();
+        ucGroup.setAppid(appId);
+        ucGroup.setTopicid(topicId);
+
+        var ucMsg = new proto.UCMessage();
+        ucMsg.setGroup(ucGroup);
+        ucMsg.setPayload(encodeUTF8(msg));
+        ucMsg.setIsstore(false);
+        ucMsg.setUser(userFrom);
+        var packetId = generateHeaderId();
+        ucMsg.setPacketid(packetId);
+        ucMsg.setBiztype(bizType);
+        ucMsg.setIsstore(isStore);
+
+        return sendUCPacket(ucMsg.serializeBinary(), proto.UC_MSG_TYPE.MESSAGE, packetId);
+    };
+
+    function queryUCGroup() {
+        if (loginState === false) {
+            return;
+        }
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', ucurl + '/topics', true);
+        xhr.setRequestHeader('content-type', 'application/json');
+        xhr.setRequestHeader('token', userToken);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status ===200) {
+                var result = JSON.parse(xhr.response);
+                if (result.code === 200 && result.message === "success") {
+                    var tmpList = result.data;
+                    for (var i = 0; i < tmpList.length; i++) {
+                        ucTopicList.push(tmpList[i]);
+                    }
+                }
+            }
+        };
+        xhr.send();
+        clearInterval(queryUCId);
+        return true;
+    }
+
+
+    function sendUCPing() {
+        if (ucTopicList.length === 0) {
+            return;
+        }
+        var groupArray = new Array(ucTopicList.length);
+        for (var i = 0; i < ucTopicList.length; i++) {
+            var group = new proto.UCGroup();
+            group.setAppid(appId);
+            group.setTopicid(ucTopicList[i]);
+            groupArray[i] = group;
+        }
+        var ucPing = new proto.UCPing();
+        ucPing.setGroupList(groupArray);
+
+        sendUCPacket(ucPing.serializeBinary(), proto.UC_MSG_TYPE.PING, generateHeaderId());
+    }
+    
+    function sendUCSequenceAck(group, sequence) {
+        var ucSeqAck = new proto.UCSequenceAck();
+        ucSeqAck.setGroup(group);
+        ucSeqAck.setSequence(sequence);
+
+        sendUCPacket(ucSeqAck.serializeBinary(), proto.UC_MSG_TYPE.SEQ_ACK, generateHeaderId());
+    }
+
+    function sendUCPacket(payload, type) {
+        var userFrom = new proto.MIMCUser();
+        userFrom.setAppid(appId);
+        userFrom.setAppaccount(appAccount);
+        userFrom.setUuid(uuid);
+        userFrom.setResource(resource);
+
+        var ucPacket = new proto.UCPacket();
+        ucPacket.setUser(userFrom);
+        ucPacket.setType(type);
+        ucPacket.setPayload(payload);
+        var packetID = generateHeaderId();
+        ucPacket.setPacketid(packetID);
+
+        var mimcPacket = new proto.MIMCPacket();
+        mimcPacket.setPacketid(packetID);
+        mimcPacket.setPackage(packetName);
+        mimcPacket.setType(proto.MIMC_MSG_TYPE.UC_PACKET);
+        mimcPacket.setPayload(ucPacket.serializeBinary());
+
+        var v5Message = buildPakcetV5(buildClientHeader("SECMSG", packetID), mimcPacket.serializeBinary());
+        sendWSMessage(v5Message);
+        return packetID;
+    }
+
 
     function sendSequenceAck(sequence) {
         var mimcSeqAck = new proto.MIMCSequenceAck();
@@ -443,6 +729,7 @@ function MIMCUser(appAccount, res) {
         var bindResp = proto.ims.XMMsgBindResp.deserializeBinary(bindMsg);
         if (bindResp.getResult()) {
             loginState = true;
+            ucIntervalId = setInterval(sendUCPing, 10000);
         }
         if (statusChange !== undefined && statusChange !== null) {
             statusChange(bindResp.getResult(), bindResp.getErrorType(), bindResp.getErrorReason(), bindResp.getErrorDesc());
@@ -469,6 +756,9 @@ function MIMCUser(appAccount, res) {
                 break;
             case proto.MIMC_MSG_TYPE.COMPOUND:
                 handleCompoundMsg(mimcPacket.getPayload());
+                break;
+            case proto.MIMC_MSG_TYPE.UC_PACKET:
+                handleUCMsg(mimcPacket.getPayload());
                 break;
             default:
                 handleUnknowCMD(mimcPacket.getPayload());
@@ -529,8 +819,11 @@ function MIMCUser(appAccount, res) {
         mimcPacket.setSequence(sequence);
         mimcPacket.setFromAccount(userFrom.getAppaccount());
         mimcPacket.setFromResource(userFrom.getResource());
+        mimcPacket.setToAccount(userTo.getAppaccount());
+        mimcPacket.setToResource(userTo.getResource());
         mimcPacket.setPayload(decodeUTF8(p2pMessage.getPayload()));
         mimcPacket.setTimeStamp(ts);
+        mimcPacket.setBizType(p2pMessage.getBiztype());
         if (msgHandler !== undefined && msgHandler !== null) {
             msgHandler(mimcPacket);
         } else {
@@ -555,6 +848,7 @@ function MIMCUser(appAccount, res) {
         mimcGroupMessage.setTopicId(group.getTopicid());
         mimcGroupMessage.setPayload(decodeUTF8(p2tMessage.getPayload()));
         mimcGroupMessage.setTimeStamp(ts);
+        mimcGroupMessage.setBizType(p2tMessage.getBiztype());
         if (groupMsgHandler !== undefined && groupMsgHandler !== null) {
             groupMsgHandler(mimcGroupMessage);
         } else {
@@ -562,12 +856,134 @@ function MIMCUser(appAccount, res) {
         }
     }
 
+    function handleUCMsg(msg) {
+        var ucPacket = proto.UCPacket.deserializeBinary(msg);
+        var user = ucPacket.getUser();
+        if (user.getUuid() !== uuid && user.getResource() !== resource) {
+            console.log("uid | resource not the same.");
+            return;
+        }
+        switch (ucPacket.getType()) {
+            case proto.UC_MSG_TYPE.JOIN_RESP:
+                handlerUCJoinResp(ucPacket.getPayload());
+                break;
+            case proto.UC_MSG_TYPE.QUIT_RESP:
+                handleUCQuitResp(ucPacket.getPayload());
+                break;
+            case proto.UC_MSG_TYPE.MESSAGE_LIST:
+                handleUCMsgList(ucPacket.getPayload());
+                break;
+            case proto.UC_MSG_TYPE.DISMISS:
+                handleUCDismiss(ucPacket.getPayload());
+                break;
+            case proto.UC_MSG_TYPE.PONG:
+                handleUCPong(ucPacket.getPayload());
+                break;
+            default:
+                handleUnknowCMD(ucPacket.getType());
+        }
+    }
+
+    function handlerUCJoinResp(message) {
+        var joinResp = proto.UCJoinResp.deserializeBinary(message);
+        var group = joinResp.getGroup();
+        if (joinResp.getCode() === 0) {
+            ucTopicList.push(group.getTopicid());
+        }
+        if (ucJoinRespHandler !== undefined && ucJoinRespHandler !== null) {
+            ucJoinRespHandler(group.getTopicid(), joinResp.getCode(), joinResp.getMessage(), contextMap.get(group.getTopicid()));
+        } else {
+            console.log("ucJoinRespHandler is not registered");
+        }
+        if (contextMap.has(group.getTopicid())) {
+            contextMap.delete(group.getTopicid());
+        }
+    }
+
+    function handleUCQuitResp(message) {
+        var quitResp = proto.UCQuitResp.deserializeBinary(message);
+        var group = quitResp.getGroup();
+
+        if (quitResp.getCode() === 0) {
+            for (var i = 0; i < ucTopicList.length; i++) {
+                if (ucTopicList[i] === group.getTopicid()) {
+                    ucTopicList.slice(i, 1);
+                }
+            }
+        }
+        if (ucQuitRespHandler !== undefined && ucQuitRespHandler !== null) {
+            ucQuitRespHandler(group.getTopicid(), quitResp.getCode(), quitResp.getMessage(), contextMap.get(group.getTopicid()));
+        } else {
+            console.log("ucQuitRespHandler is not registered");
+        }
+        if (contextMap.has(group.getTopicid())) {
+            contextMap.delete(group.getTopicid());
+        }
+    }
+
+    function handleUCMsgList(message) {
+        var ucMsgList = proto.UCMessageList.deserializeBinary(message);
+        sendUCSequenceAck(ucMsgList.getGroup(), ucMsgList.getMaxsequence());
+        var msgList = ucMsgList.getMessageList();
+        for (var i = 0; i < msgList.length; i++) {
+            try {
+                handleUCMessage(msgList[i]);
+            } catch (err){
+                console.log("handleUCMessage " + i + " fail, err=" + err.message);
+            }
+        }
+    }
+
+    function handleUCMessage(message) {
+        var group = message.getGroup();
+        var user = message.getUser();
+        var mimcGroupMessage = new MIMCGroupMessage();
+        mimcGroupMessage.setPacketId(message.getPacketid());
+        mimcGroupMessage.setSequence(message.getSequence());
+        mimcGroupMessage.setFromAccount(user.getAppaccount());
+        mimcGroupMessage.setFromResource(user.getResource());
+        mimcGroupMessage.setTopicId(group.getTopicid());
+        mimcGroupMessage.setPayload(decodeUTF8(message.getPayload()));
+        mimcGroupMessage.setTimeStamp(message.getTimestamp());
+        mimcGroupMessage.setBizType(message.getBiztype());
+        if (ucMsgHandler !== undefined && ucMsgHandler !== null) {
+            ucMsgHandler(mimcGroupMessage);
+        } else {
+            console.log("ucMsgHandler is not registered");
+        }
+    }
+
+    function handleUCDismiss(message) {
+        var ucDismiss = proto.UCDismiss.deserializeBinary(message);
+        var group = ucDismiss.getGroup();
+
+        for (var i = 0; i < ucTopicList.length; i++) {
+            if (ucTopicList[i] === group.getTopicid()) {
+                ucTopicList.slice(i, 1);
+            }
+        }
+
+        if (ucDismissHandler !== undefined && ucDismissHandler !== null) {
+            ucDismissHandler(group.getTopicid());
+        } else {
+            console.log("ucDismissHandler is not registered");
+        }
+
+        if (contextMap.has(group.getTopicid())) {
+            contextMap.delete(group.getTopicid());
+        }
+    }
+
+    function handleUCPong(message) {
+
+    }
+
     function handleUnknowCMD(unknow_message) {
         return;
     }
 
     var MIMCMessage = function () {
-        var packetId, sequence, fromAccount, fromResource, payload, timeStamp;
+        var packetId, sequence, fromAccount, fromResource, toAccount, toResource, payload, timeStamp, bizType;
 
         this.setPacketId = function (value) {
             packetId = value;
@@ -593,6 +1009,22 @@ function MIMCUser(appAccount, res) {
             return fromResource;
         };
 
+        this.setToAccount = function (value) {
+            toAccount = value;
+        };
+
+        this.getToAccount = function () {
+            return toAccount;
+        };
+
+        this.setToResource = function (value) {
+            toResource = value;
+        };
+
+        this.getToResource = function () {
+            return toResource;
+        };
+
         this.setSequence = function (value) {
             sequence = value;
         };
@@ -616,10 +1048,18 @@ function MIMCUser(appAccount, res) {
         this.getTimeStamp = function () {
             return timeStamp;
         };
+
+        this.setBizType = function (value) {
+            bizType = value;
+        };
+
+        this.getBizType = function () {
+            return bizType;
+        };
     };
 
     var MIMCGroupMessage = function () {
-        var packetId, sequence, fromAccount, fromResource, groupId, payload, timeStamp;
+        var packetId, sequence, fromAccount, fromResource, groupId, payload, timeStamp, bizType;
 
         this.setPacketId = function (value) {
             packetId = value;
@@ -675,6 +1115,14 @@ function MIMCUser(appAccount, res) {
 
         this.getTimeStamp = function () {
             return timeStamp;
+        };
+
+        this.setBizType = function (value) {
+            bizType = value;
+        };
+
+        this.getBizType = function () {
+            return bizType;
         };
     };
 
