@@ -227,8 +227,7 @@
 		var a = new Base64();
 		var message_ = a.encode(message);
 		jsonMsg = String(JSON.stringify({version: 0, 
-						msgId: "TEXT_1234", 
-						msgType: 103,
+						msgId: "TEXT_1234",
 						timestamp: String((new Date()).valueOf()),
 						content: message_}));
 		console.log(jsonMsg);
@@ -247,7 +246,6 @@
         var message_ = a.encode(message);
         jsonMsg = String(JSON.stringify({version: 0,
             msgId: "TEXT_1234",
-            msgType: 103,
             timestamp: String((new Date()).valueOf()),
             content: message_}));
 
@@ -263,7 +261,6 @@
 
     function serverAck(packetId, sequence, timeStamp, errMsg) {
         //writeToScreens("receive msg ack:" + packetId + ",sequence=" + sequence + ",ts=" + timeStamp);
-        return;
     }
 
     function disconnect() {
@@ -324,8 +321,7 @@
 		var a = new Base64();
 		var groupMsg_ = a.encode(groupMsg);
 		jsonMsg = String(JSON.stringify({version: 0, 
-						msgId: "TEXT_1234", 
-						msgType: 103,
+						msgId: "TEXT_1234",
 						timestamp: String((new Date()).valueOf()),
 						content: groupMsg_}));
         try {
@@ -388,10 +384,10 @@ function Base64() {
             chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
             chr3 = ((enc3 & 3) << 6) | enc4;
             output = output + String.fromCharCode(chr1);
-            if (enc3 != 64) {
+            if (enc3 !== 64) {
                 output = output + String.fromCharCode(chr2);
             }
-            if (enc4 != 64) {
+            if (enc4 !== 64) {
                 output = output + String.fromCharCode(chr3);
             }
         }
