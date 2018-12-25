@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <meta charset="utf-8" />
 <title>WebSocket Test</title>
-<script type="text/javascript" src="../sdk/mimc-min_1_0_1.js"></script>
+<script type="text/javascript" src="../sdk/mimc-min_1_0_2.js"></script>
 <script language="javascript"type="text/javascript">
     mimc_appId = "2882303761517669588";
     mimc_appSecret = "b0L3IOz/9Ob809v8H2FbVg==";
@@ -37,7 +37,7 @@
 
     function login() {
         mimc_appAccount = document.getElementById("loginUser").value;
-        user = new MIMCUser(mimc_appAccount);
+        user = new MIMCUser(mimc_appId, mimc_appAccount);
         user.registerP2PMsgHandler(receiveP2PMsg);
         user.registerGroupMsgHandler(receiveP2TMsg);
         user.registerFetchToken(fetchMIMCToken);
