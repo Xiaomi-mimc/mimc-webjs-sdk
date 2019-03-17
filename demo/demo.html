@@ -210,7 +210,7 @@
         writeToScreens("time: " + date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + " " + date.getMilliseconds());
         var disMsg = new Base64();
 		console.log("biztype=" + message.getBizType());
-		writeToScreens(message.getFromAccount() + " to " + mimc_appAccount + ":" + disMsg.decode(JSON.parse(message.getPayload()).content));
+		writeToScreens(message.getFromAccount() + " to " + mimc_appAccount + ":" + disMsg.decode(JSON.parse(message.getPayload()).payload));
     }
 
     function receiveP2TMsg(message) {
@@ -218,7 +218,7 @@
         writeToScreens("time: " + date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + " " + date.getMilliseconds());
         var disMsg = new Base64();
         console.log("biztype=" + message.getBizType());
-		writeToScreens(message.getTopicId() + " " + message.getFromAccount() + ":" + disMsg.decode(JSON.parse(message.getPayload()).content));
+		writeToScreens(message.getTopicId() + " " + message.getFromAccount() + ":" + disMsg.decode(JSON.parse(message.getPayload()).payload));
     }
 
     function sendMsg() {
@@ -229,7 +229,7 @@
 		jsonMsg = String(JSON.stringify({version: 0, 
 						msgId: "TEXT_1234",
 						timestamp: String((new Date()).valueOf()),
-						content: message_}));
+                        payload: message_}));
 		console.log(jsonMsg);
         try {
             var packetId = user.sendMessage(toUser, jsonMsg);
@@ -247,7 +247,7 @@
         jsonMsg = String(JSON.stringify({version: 0,
             msgId: "TEXT_1234",
             timestamp: String((new Date()).valueOf()),
-            content: message_}));
+            payload: message_}));
 
         var pushData = {appId:mimc_appId, appKey:mimc_appKey, appSecret:mimc_appSecret, fromAccount:mimc_appAccount, fromResource:"resWeb", toAccount:toUser, msg:jsonMsg};
         var result = httpRequest('https://mimc.chat.xiaomi.net/api/push/p2p/', pushData);
