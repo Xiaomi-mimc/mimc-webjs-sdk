@@ -28,6 +28,7 @@ function MIMCUser(appId, appAccount, res) {
     var ucurl = 'https://mimc.chat.xiaomi.net/api/uctopic';
     //var ucurl = 'http://10.38.162.149/api/uctopic';
     var loginState = false;
+    var isConnected = false;
     var resource = "";
     var userToken = "";
     var websocket;
@@ -111,6 +112,18 @@ function MIMCUser(appId, appAccount, res) {
         return uuid;
     };
 
+    this.getAppAccount = function () {
+      return appAccount;
+    };
+
+    this.isConnected = function () {
+        return isConnected;
+    };
+
+    this.isLogin = function () {
+        return loginState;
+    };
+
     function initWebsocket() {
         websocket = new WebSocket(wsUri);
         websocket.onopen = function(evt) {
@@ -128,6 +141,7 @@ function MIMCUser(appId, appAccount, res) {
     }
 
     function onOpen(evt) {
+        isConnected = true;
         MIMCConnect();
     }
 
