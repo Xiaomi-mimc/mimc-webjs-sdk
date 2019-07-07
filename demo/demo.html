@@ -323,7 +323,7 @@
 		jsonMsg = String(JSON.stringify({version: 0, 
 						msgId: "TEXT_1234",
 						timestamp: String((new Date()).valueOf()),
-						content: groupMsg_}));
+						payload: groupMsg_}));
         try {
             var packetId = user.sendGroupMessage(topicId, jsonMsg, "json");
         } catch (err) {
