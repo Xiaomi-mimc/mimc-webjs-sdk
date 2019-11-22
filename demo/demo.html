@@ -64,8 +64,8 @@
         console.log("biztype=" + groupMsg.getBizType());
         var date = new Date(parseInt(groupMsg.getTimeStamp()));
         writeToScreens("time: " + date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + " " + date.getMilliseconds());
-        writeToScreens("packetid="+groupMsg.getPacketId());
-        writeToScreens(groupMsg.getTopicId() + " " + groupMsg.getFromAccount() + ":" + groupMsg.getPayload());
+        var disMsg = new Base64();
+        writeToScreens(groupMsg.getTopicId() + " " + groupMsg.getFromAccount() + ":" + disMsg.decode(JSON.parse(groupMsg.getPayload()).payload));
     }
 
     function ucQuitResp(topicId, code, msg, context) {
@@ -193,8 +193,21 @@
     function sendUCMsg() {
         var topicID = document.getElementById("ucTopicId1").value;
         var msg = document.getElementById("msgId").value;
-        var type = "txt";
-        var packetid = user.sendUnlimitedGroupMessage(topicID, msg, type);
+        var type = "json";
+
+        var a = new Base64();
+        var message_ = a.encode(msg);
+        jsonMsg = String(JSON.stringify({version: 0,
+            msgId: "TEXT_1234",
+            timestamp: String((new Date()).valueOf()),
+            payload: message_}));
+        console.log(jsonMsg);
+        try {
+            var packetid = user.sendUnlimitedGroupMessage(topicID, jsonMsg, type);
+        } catch (err) {
+            console.log("sendMessage fail, err=" + err);
+        }
+
     }
 
     function statusChange(bindResult, errType, errReason, errDesc) {
