@@ -2,6 +2,7 @@
 <meta charset="utf-8" />
 <title>WebSocket Test</title>
 <script type="text/javascript" src="../sdk/mimc-min_1_0_2.js"></script>
+<script src="base64.js"></script>
 <script language="javascript"type="text/javascript">
     mimc_appId = "2882303761517669588";
     mimc_appSecret = "b0L3IOz/9Ob809v8H2FbVg==";
@@ -64,8 +65,7 @@
         console.log("biztype=" + groupMsg.getBizType());
         var date = new Date(parseInt(groupMsg.getTimeStamp()));
         writeToScreens("time: " + date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + " " + date.getMilliseconds());
-        var disMsg = new Base64();
-        writeToScreens(groupMsg.getTopicId() + " " + groupMsg.getFromAccount() + ":" + disMsg.decode(JSON.parse(groupMsg.getPayload()).payload));
+        writeToScreens(groupMsg.getTopicId() + " " + groupMsg.getFromAccount() + ":" + Base64.decode(JSON.parse(groupMsg.getPayload()).payload));
     }
 
     function ucQuitResp(topicId, code, msg, context) {
@@ -195,8 +195,7 @@
         var msg = document.getElementById("msgId").value;
         var type = "json";
 
-        var a = new Base64();
-        var message_ = a.encode(msg);
+        var message_ = Base64.encode(msg);
         jsonMsg = String(JSON.stringify({version: 0,
             msgId: "TEXT_1234",
             timestamp: String((new Date()).valueOf()),
@@ -221,24 +220,24 @@
     function receiveP2PMsg(message) {
         var date = new Date(parseInt(message.getTimeStamp()));
         writeToScreens("time: " + date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + " " + date.getMilliseconds());
-        var disMsg = new Base64();
+
 		console.log("biztype=" + message.getBizType());
-		writeToScreens(message.getFromAccount() + " to " + mimc_appAccount + ":" + disMsg.decode(JSON.parse(message.getPayload()).payload));
+		writeToScreens(message.getFromAccount() + " to " + mimc_appAccount + ":" + Base64.decode(JSON.parse(message.getPayload()).payload));
     }
 
     function receiveP2TMsg(message) {
         var date = new Date(parseInt(message.getTimeStamp()));
         writeToScreens("time: " + date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + " " + date.getMilliseconds());
-        var disMsg = new Base64();
+
         console.log("biztype=" + message.getBizType());
-		writeToScreens(message.getTopicId() + " " + message.getFromAccount() + ":" + disMsg.decode(JSON.parse(message.getPayload()).payload));
+		writeToScreens(message.getTopicId() + " " + message.getFromAccount() + ":" + Base64.decode(JSON.parse(message.getPayload()).payload));
     }
 
     function sendMsg() {
         var toUser = document.getElementById("username").value;
         var message = document.getElementById("sendmessage").value;
-		var a = new Base64();
-		var message_ = a.encode(message);
+
+		var message_ = Base64.encode(message);
 		jsonMsg = String(JSON.stringify({version: 0, 
 						msgId: "TEXT_1234",
 						timestamp: String((new Date()).valueOf()),
@@ -255,8 +254,8 @@
     function pushMsg() {
         var toUser = document.getElementById("username").value;
         var message = document.getElementById("sendmessage").value;
-        var a = new Base64();
-        var message_ = a.encode(message);
+
+        var message_ = Base64.encode(message);
         jsonMsg = String(JSON.stringify({version: 0,
             msgId: "TEXT_1234",
             timestamp: String((new Date()).valueOf()),
@@ -331,8 +330,7 @@
     function sendGroupMsg() {
         var topicId = document.getElementById("topicId").value;
         var groupMsg = document.getElementById("groupMessage").value;
-		var a = new Base64();
-		var groupMsg_ = a.encode(groupMsg);
+		var groupMsg_ = Base64.encode(groupMsg);
 		jsonMsg = String(JSON.stringify({version: 0, 
 						msgId: "TEXT_1234",
 						timestamp: String((new Date()).valueOf()),
@@ -351,106 +349,7 @@
         pre.innerHTML = message;
         outputs.appendChild(pre);
     }
-function Base64() {
- 
-    _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
- 
 
-    this.encode = function (input) {
-        var output = "";
-        var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
-        var i = 0;
-        input = _utf8_encode(input);
-        while (i < input.length) {
-            chr1 = input.charCodeAt(i++);
-            chr2 = input.charCodeAt(i++);
-            chr3 = input.charCodeAt(i++);
-            enc1 = chr1 >> 2;
-            enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
-            enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
-            enc4 = chr3 & 63;
-            if (isNaN(chr2)) {
-                enc3 = enc4 = 64;
-            } else if (isNaN(chr3)) {
-                enc4 = 64;
-            }
-            output = output +
-            _keyStr.charAt(enc1) + _keyStr.charAt(enc2) +
-            _keyStr.charAt(enc3) + _keyStr.charAt(enc4);
-        }
-        return output;
-    };
- 
-    
-    this.decode = function (input) {
-        var output = "";
-        var chr1, chr2, chr3;
-        var enc1, enc2, enc3, enc4;
-        var i = 0;
-        input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
-        while (i < input.length) {
-            enc1 = _keyStr.indexOf(input.charAt(i++));
-            enc2 = _keyStr.indexOf(input.charAt(i++));
-            enc3 = _keyStr.indexOf(input.charAt(i++));
-            enc4 = _keyStr.indexOf(input.charAt(i++));
-            chr1 = (enc1 << 2) | (enc2 >> 4);
-            chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
-            chr3 = ((enc3 & 3) << 6) | enc4;
-            output = output + String.fromCharCode(chr1);
-            if (enc3 !== 64) {
-                output = output + String.fromCharCode(chr2);
-            }
-            if (enc4 !== 64) {
-                output = output + String.fromCharCode(chr3);
-            }
-        }
-        output = _utf8_decode(output);
-        return output;
-    };
- 
-    _utf8_encode = function (string) {
-        string = string.replace(/\r\n/g,"\n");
-        var utftext = "";
-        for (var n = 0; n < string.length; n++) {
-            var c = string.charCodeAt(n);
-            if (c < 128) {
-                utftext += String.fromCharCode(c);
-            } else if((c > 127) && (c < 2048)) {
-                utftext += String.fromCharCode((c >> 6) | 192);
-                utftext += String.fromCharCode((c & 63) | 128);
-            } else {
-                utftext += String.fromCharCode((c >> 12) | 224);
-                utftext += String.fromCharCode(((c >> 6) & 63) | 128);
-                utftext += String.fromCharCode((c & 63) | 128);
-            }
- 
-        }
-        return utftext;
-    };
- 
-    _utf8_decode = function (utftext) {
-        var string = "";
-        var i = 0;
-        var c = c1 = c2 = 0;
-        while ( i < utftext.length ) {
-            c = utftext.charCodeAt(i);
-            if (c < 128) {
-                string += String.fromCharCode(c);
-                i++;
-            } else if((c > 191) && (c < 224)) {
-                c2 = utftext.charCodeAt(i+1);
-                string += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
-                i += 2;
-            } else {
-                c2 = utftext.charCodeAt(i+1);
-                c3 = utftext.charCodeAt(i+2);
-                string += String.fromCharCode(((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
-                i += 3;
-            }
-        }
-        return string;
-    }
-}
     window.addEventListener("load", init, false);  
 </script>  
 <h2>WebSocket Test</h2>
