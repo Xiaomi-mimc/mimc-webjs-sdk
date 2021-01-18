@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <meta charset="utf-8" />
 <title>WebSocket Test</title>
-<script type="text/javascript" src="../sdk/mimc-min_1_0_2.js"></script>
+<script type="text/javascript" src="../sdk/mimc-min_1_0_3.js"></script>
 <script src="base64.js"></script>
 <script language="javascript"type="text/javascript">
     mimc_appId = "2882303761517669588";
@@ -25,8 +25,6 @@
         return httpRequest('https://mimc.chat.xiaomi.net/api/account/token', sendData);
     }
 
-
-
     function httpRequest(url, data) {
         var xhr = new XMLHttpRequest();
         xhr.open('POST', url, false);
@@ -49,7 +47,109 @@
         user.registerUCJoinRespHandler(ucJoinResp);
         user.registerUCMsgHandler(ucMessage);
         user.registerUCQuitRespHandler(ucQuitResp);
+        user.registerPullNotificationHandler(pullNotificationHandler);
         user.login();
+    }
+
+
+    function sendMsg() {
+        var toUser = document.getElementById("username").value;
+        var message = document.getElementById("sendmessage").value;
+
+        var message_ = Base64.encode(message);
+        jsonMsg = String(JSON.stringify({version: 0,
+            msgId: "TEXT_1234",
+            timestamp: String((new Date()).valueOf()),
+            payload: message_}));
+        console.log(jsonMsg);
+        try {
+            var packetId = user.sendMessage(toUser, jsonMsg);
+        } catch (err) {
+            console.log("sendMessage fail, err=" + err);
+        }
+        writeToScreens(mimc_appAccount + " to " + toUser + ":" + message);
+    }
+
+    function pushMsg() {
+        var toUser = document.getElementById("username").value;
+        var message = document.getElementById("sendmessage").value;
+
+        var message_ = Base64.encode(message);
+        jsonMsg = String(JSON.stringify({version: 0,
+            msgId: "TEXT_1234",
+            timestamp: String((new Date()).valueOf()),
+            payload: message_}));
+
+        var pushData = {appId:mimc_appId, appKey:mimc_appKey, appSecret:mimc_appSecret, fromAccount:mimc_appAccount, fromResource:"resWeb", toAccount:toUser, msg:jsonMsg};
+        var result = httpRequest('https://mimc.chat.xiaomi.net/api/push/p2p/', pushData);
+        writeToScreens(mimc_appAccount + " to " + toUser + ":" + message);
+        if (200 !== result.code) {
+            writeToScreens("result code:"  + result.code + ",message=" + result.message);
+        }
+
+        var packetId = result.data.packetId;
+    }
+
+    function statusChange(bindResult, errType, errReason, errDesc) {
+        if (bindResult) {
+            writeToScreens("login succeed");
+        } else {
+            writeToScreens("login failed.errReason=" + errReason + ",errDesc=" + errDesc + ",errType=" + errType);
+        }
+    }
+
+    function receiveP2PMsg(message) {
+        var date = new Date(parseInt(message.getTimeStamp()));
+        writeToScreens("time: " + date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + " " + date.getMilliseconds());
+
+		console.log("biztype=" + message.getBizType());
+		writeToScreens(message.getFromAccount() + " to " + mimc_appAccount + ":" + Base64.decode(JSON.parse(message.getPayload()).payload));
+    }
+
+    function receiveP2TMsg(message) {
+        var date = new Date(parseInt(message.getTimeStamp()));
+        writeToScreens("time: " + date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + " " + date.getMilliseconds());
+
+        console.log("biztype=" + message.getBizType());
+		writeToScreens(message.getTopicId() + " " + message.getFromAccount() + ":" + Base64.decode(JSON.parse(message.getPayload()).payload));
+    }
+    
+    function pullNotificationHandler(minSequence, maxSequence) {
+        //拉取会话列表
+        writeToScreens("pull notification");
+    }
+
+    function serverAck(packetId, sequence, timeStamp, errMsg) {
+        //writeToScreens("receive msg ack:" + packetId + ",sequence=" + sequence + ",ts=" + timeStamp);
+    }
+
+    function disconnect() {
+        writeToScreens("disconnect");
+    }
+
+    function logout() {
+        user.logout();
+    }
+
+
+
+    function sendUCMsg() {
+        var topicID = document.getElementById("ucTopicId1").value;
+        var msg = document.getElementById("msgId").value;
+        var type = "json";
+
+        var message_ = Base64.encode(msg);
+        jsonMsg = String(JSON.stringify({version: 0,
+            msgId: "TEXT_1234",
+            timestamp: String((new Date()).valueOf()),
+            payload: message_}));
+        console.log(jsonMsg);
+        try {
+            var packetid = user.sendUnlimitedGroupMessage(topicID, jsonMsg, type);
+        } catch (err) {
+            console.log("sendMessage fail, err=" + err);
+        }
+
     }
 
     function ucDismiss(topicId) {
@@ -70,12 +170,6 @@
 
     function ucQuitResp(topicId, code, msg, context) {
         writeToScreens("uc quit:" + topicId + ",code=" + code + ",msg=" + msg + ",context=" + context);
-    }
-
-    function createUCGroup() {
-        var groupName = document.getElementById("topicName").value;
-        var context = "testtest";
-        user.createUnlimitedGroup(groupName, createUCGroupCB, context);
     }
 
     function createUCGroupCB(topicId, topicName, isSuccess, errMsg, context) {
@@ -109,6 +203,74 @@
             writeToScreens("dismiss group:" + topicId + ",context=" + context);
         } else {
             writeToScreens("dismiss group " + topicId + " failed" + ",context=" + context);
+        }
+    }
+
+    function createUCGroup() {
+        var groupName = document.getElementById("topicName").value;
+        var context = "testtest";
+        user.createUnlimitedGroup(groupName, createUCGroupCB, context);
+    }
+
+
+
+    function createGroup() {
+        var topicName = document.getElementById("groupName").value;
+        var groupMem = document.getElementById("groupMem").value;
+        var data = {topicName:topicName,accounts:groupMem};
+        var url = 'https://mimc.chat.xiaomi.net/api/topic/' + mimc_appId;
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', url, false);
+        xhr.setRequestHeader('content-type', 'application/json');
+        xhr.setRequestHeader('appKey', mimc_appKey);
+        xhr.setRequestHeader('appSecret', mimc_appSecret);
+        xhr.setRequestHeader('appAccount', mimc_appAccount);
+        xhr.send(JSON.stringify(data));
+
+        var result = JSON.parse(xhr.response);
+        if (200 !== result.code) {
+            writeToScreens("create group failed,msg=" + result.message);
+            return;
+        }
+
+        writeToScreens("group name=" + result.data.topicInfo.topicName + ",topicId=" + result.data.topicInfo.topicId);
+    }
+
+    function sendGroupMsg() {
+        var topicId = document.getElementById("topicId").value;
+        var groupMsg = document.getElementById("groupMessage").value;
+        var groupMsg_ = Base64.encode(groupMsg);
+        jsonMsg = String(JSON.stringify({version: 0,
+            msgId: "TEXT_1234",
+            timestamp: String((new Date()).valueOf()),
+            payload: groupMsg_}));
+        try {
+            var packetId = user.sendGroupMessage(topicId, jsonMsg, "json");
+        } catch (err) {
+            console.log("sendGroupMessage fail, err=" + err);
+        }
+        writeToScreens(mimc_appAccount + " to " + topicId + ":" + groupMsg);
+    }
+
+    function queryGroupInfo() {
+        var url = 'https://mimc.chat.xiaomi.net/api/topic/' + mimc_appId + '/account';
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, false);
+        xhr.setRequestHeader('content-type', 'application/json');
+        xhr.setRequestHeader('appKey', mimc_appKey);
+        xhr.setRequestHeader('appSecret', mimc_appSecret);
+        xhr.setRequestHeader('appAccount', mimc_appAccount);
+        xhr.send();
+
+        var result = JSON.parse(xhr.response);
+        if (200 !== result.code) {
+            writeToScreens("create group failed,msg=" + result.message);
+            return;
+        }
+
+        for (var i = 0; i < result.data.length; i++) {
+            writeToScreens("group name=" + result.data[i].topicName + ",topic id=" + result.data[i].topicId);
         }
     }
 
@@ -189,158 +351,6 @@
                 writeToScreens("user:" + data[i].appAccout + ",app id=" + data[i].appId);
             }
         }
-    }
-    function sendUCMsg() {
-        var topicID = document.getElementById("ucTopicId1").value;
-        var msg = document.getElementById("msgId").value;
-        var type = "json";
-
-        var message_ = Base64.encode(msg);
-        jsonMsg = String(JSON.stringify({version: 0,
-            msgId: "TEXT_1234",
-            timestamp: String((new Date()).valueOf()),
-            payload: message_}));
-        console.log(jsonMsg);
-        try {
-            var packetid = user.sendUnlimitedGroupMessage(topicID, jsonMsg, type);
-        } catch (err) {
-            console.log("sendMessage fail, err=" + err);
-        }
-
-    }
-
-    function statusChange(bindResult, errType, errReason, errDesc) {
-        if (bindResult) {
-            writeToScreens("login succeed");
-        } else {
-            writeToScreens("login failed.errReason=" + errReason + ",errDesc=" + errDesc + ",errType=" + errType);
-        }
-    }
-
-    function receiveP2PMsg(message) {
-        var date = new Date(parseInt(message.getTimeStamp()));
-        writeToScreens("time: " + date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + " " + date.getMilliseconds());
-
-		console.log("biztype=" + message.getBizType());
-		writeToScreens(message.getFromAccount() + " to " + mimc_appAccount + ":" + Base64.decode(JSON.parse(message.getPayload()).payload));
-    }
-
-    function receiveP2TMsg(message) {
-        var date = new Date(parseInt(message.getTimeStamp()));
-        writeToScreens("time: " + date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + " " + date.getMilliseconds());
-
-        console.log("biztype=" + message.getBizType());
-		writeToScreens(message.getTopicId() + " " + message.getFromAccount() + ":" + Base64.decode(JSON.parse(message.getPayload()).payload));
-    }
-
-    function sendMsg() {
-        var toUser = document.getElementById("username").value;
-        var message = document.getElementById("sendmessage").value;
-
-		var message_ = Base64.encode(message);
-		jsonMsg = String(JSON.stringify({version: 0, 
-						msgId: "TEXT_1234",
-						timestamp: String((new Date()).valueOf()),
-                        payload: message_}));
-		console.log(jsonMsg);
-        try {
-            var packetId = user.sendMessage(toUser, jsonMsg);
-        } catch (err) {
-            console.log("sendMessage fail, err=" + err);
-        }
-        writeToScreens(mimc_appAccount + " to " + toUser + ":" + message);
-    }
-
-    function pushMsg() {
-        var toUser = document.getElementById("username").value;
-        var message = document.getElementById("sendmessage").value;
-
-        var message_ = Base64.encode(message);
-        jsonMsg = String(JSON.stringify({version: 0,
-            msgId: "TEXT_1234",
-            timestamp: String((new Date()).valueOf()),
-            payload: message_}));
-
-        var pushData = {appId:mimc_appId, appKey:mimc_appKey, appSecret:mimc_appSecret, fromAccount:mimc_appAccount, fromResource:"resWeb", toAccount:toUser, msg:jsonMsg};
-        var result = httpRequest('https://mimc.chat.xiaomi.net/api/push/p2p/', pushData);
-        writeToScreens(mimc_appAccount + " to " + toUser + ":" + message);
-        if (200 !== result.code) {
-            writeToScreens("result code:"  + result.code + ",message=" + result.message);
-        }
-
-        var packetId = result.data.packetId;
-    }
-
-    function serverAck(packetId, sequence, timeStamp, errMsg) {
-        //writeToScreens("receive msg ack:" + packetId + ",sequence=" + sequence + ",ts=" + timeStamp);
-    }
-
-    function disconnect() {
-        writeToScreens("disconnect");
-    }
-
-    function logout() {
-        user.logout();
-    }
-
-    function createGroup() {
-        var topicName = document.getElementById("groupName").value;
-        var groupMem = document.getElementById("groupMem").value;
-        var data = {topicName:topicName,accounts:groupMem};
-        var url = 'https://mimc.chat.xiaomi.net/api/topic/' + mimc_appId;
-
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', url, false);
-        xhr.setRequestHeader('content-type', 'application/json');
-        xhr.setRequestHeader('appKey', mimc_appKey);
-        xhr.setRequestHeader('appSecret', mimc_appSecret);
-        xhr.setRequestHeader('appAccount', mimc_appAccount);
-        xhr.send(JSON.stringify(data));
-
-        var result = JSON.parse(xhr.response);
-        if (200 !== result.code) {
-            writeToScreens("create group failed,msg=" + result.message);
-            return;
-        }
-
-        writeToScreens("group name=" + result.data.topicInfo.topicName + ",topicId=" + result.data.topicInfo.topicId);
-    }
-
-    function queryGroupInfo() {
-        var url = 'https://mimc.chat.xiaomi.net/api/topic/' + mimc_appId + '/account';
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', url, false);
-        xhr.setRequestHeader('content-type', 'application/json');
-        xhr.setRequestHeader('appKey', mimc_appKey);
-        xhr.setRequestHeader('appSecret', mimc_appSecret);
-        xhr.setRequestHeader('appAccount', mimc_appAccount);
-        xhr.send();
-
-        var result = JSON.parse(xhr.response);
-        if (200 !== result.code) {
-            writeToScreens("create group failed,msg=" + result.message);
-            return;
-        }
-
-        for (var i = 0; i < result.data.length; i++) {
-            writeToScreens("group name=" + result.data[i].topicName + ",topic id=" + result.data[i].topicId);
-        }
-    }
-
-    function sendGroupMsg() {
-        var topicId = document.getElementById("topicId").value;
-        var groupMsg = document.getElementById("groupMessage").value;
-		var groupMsg_ = Base64.encode(groupMsg);
-		jsonMsg = String(JSON.stringify({version: 0, 
-						msgId: "TEXT_1234",
-						timestamp: String((new Date()).valueOf()),
-						payload: groupMsg_}));
-        try {
-            var packetId = user.sendGroupMessage(topicId, jsonMsg, "json");
-        } catch (err) {
-            console.log("sendGroupMessage fail, err=" + err);
-        }
-        writeToScreens(mimc_appAccount + " to " + topicId + ":" + groupMsg);
     }
 
     function writeToScreens(message) {
