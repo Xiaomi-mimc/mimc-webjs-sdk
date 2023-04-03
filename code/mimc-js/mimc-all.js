@@ -30660,7 +30660,7 @@ function MIMCUser(appId, appAccount, res) {
         sendWSMessage(V5message);
     }
 
-    function userLogin() {
+    async function userLogin() {
         if (loginState === true) {
             console.log("user already login.");
             statusChange(true,null,null,null);
@@ -30669,7 +30669,7 @@ function MIMCUser(appId, appAccount, res) {
 
         var tokenInfo;
         if (fetchMIMCToken !== undefined && fetchMIMCToken !== null) {
-            tokenInfo = fetchMIMCToken();
+            tokenInfo = await fetchMIMCToken();
         } else {
             console.log("fetchMIMCToken is not registered");
             return;
